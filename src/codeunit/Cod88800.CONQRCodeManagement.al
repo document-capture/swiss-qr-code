@@ -1,4 +1,4 @@
-Codeunit 88800 "CON QRCode Management"
+Codeunit 88800 "CON QR Code Management"
 {
 
     trigger OnRun()
@@ -20,13 +20,13 @@ Codeunit 88800 "CON QRCode Management"
     var
         CodeContent: array[33] of Text;
 
-    local procedure GetAmt() ReturnValue: Decimal
+    procedure GetAmt() ReturnValue: Decimal
     begin
         if not Evaluate(ReturnValue, ConvertStr(CodeContent[19], '.', GetDecimalSeprator)) then
             Error('Invalid Amount: %1', CodeContent[19]);
     end;
 
-    local procedure GetAmtCurrency() ReturnValue: Code[3]
+    procedure GetAmtCurrency() ReturnValue: Code[3]
     begin
         if not Evaluate(ReturnValue, Format(CodeContent[20])) then
             exit;
@@ -35,7 +35,13 @@ Codeunit 88800 "CON QRCode Management"
             ReturnValue := '';
     end;
 
-    local procedure GetDecimalSeprator() Seperator: Text[1]
+    procedure GetBillInfo() ReturnValue: Text[140]
+    begin
+        if not Evaluate(ReturnValue, Format(CodeContent[32])) then
+            exit;
+    end;
+
+    procedure GetDecimalSeprator() Seperator: Text[1]
     var
         Amount: Decimal;
     begin
@@ -43,13 +49,19 @@ Codeunit 88800 "CON QRCode Management"
         Seperator := DelChr(Format(Amount), '=', '1');
     end;
 
-    local procedure GetPaymentReference() ReturnValue: Code[27]
+    procedure GetIBAN() ReturnValue: Text[21]
+    begin
+        if not Evaluate(ReturnValue, Format(CodeContent[4])) then
+            exit;
+    end;
+
+    procedure GetPaymentReference() ReturnValue: Code[27]
     begin
         if not Evaluate(ReturnValue, Format(CodeContent[29])) then
             exit;
     end;
 
-    local procedure GetUnstructuredMessage() ReturnValue: Text[140]
+    procedure GetUnstructuredMessage() ReturnValue: Text[140]
     begin
         if not Evaluate(ReturnValue, Format(CodeContent[30])) then
             exit;
@@ -58,7 +70,7 @@ Codeunit 88800 "CON QRCode Management"
             ReturnValue := '';
     end;
 
-    local procedure GetVersion(CodeContent: Text) ReturnValue: Code[4]
+    procedure GetVersion(CodeContent: Text) ReturnValue: Code[4]
     begin
         if not Evaluate(ReturnValue, Format(CodeContent[4])) then
             exit;

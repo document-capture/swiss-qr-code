@@ -1,0 +1,26 @@
+{
+  "id": "526feeb5-4f8c-4667-bd6d-60e14a8d66b1",
+  "name": "CDC-QR-Management",
+  "publisher": "Default publisher",
+  "version": "1.0.0.0",
+  "brief": "",
+  "description": "",
+  "privacyStatement": "",
+  "EULA": "",
+  "help": "",
+  "url": "",
+  "logo": "",
+  "dependencies": [],
+  "screenshots": [],
+  "platform": "14.0.0.0",
+  "application": "14.0.0.0",
+  "idRanges": [
+    {
+      "from": 88800,
+      "to": 88810
+    }
+  ],
+  "contextSensitiveHelpUrl": "https://CDC-QR-Management.com/help/",
+  "showMyCode": true,
+  "runtime": "3.0"
+}

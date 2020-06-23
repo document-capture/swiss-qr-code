@@ -1,22 +1,6 @@
 Codeunit 88800 "CON QR Code Management"
 {
 
-    trigger OnRun()
-    var
-        CDCDocument: Record "CDC Document";
-        CodeContent: array[33] of Text;
-    begin
-        CDCDocument.Get('D000013');
-        if ReadSwissPaymentQRCodeInDocument(CDCDocument) then begin
-            Message('%1: %2 - %3 - %4', GetAmtCurrency, GetAmt, GetUnstructuredMessage, GetPaymentReference);
-        end;
-
-        CDCDocument.Get('D000014');
-        if ReadSwissPaymentQRCodeInDocument(CDCDocument) then begin
-            Message('%1: %2 - %3 - %4', GetAmtCurrency, GetAmt, GetUnstructuredMessage, GetPaymentReference);
-        end;
-    end;
-
     var
         CodeContent: array[33] of Text;
 

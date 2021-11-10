@@ -1,25 +1,26 @@
 codeunit 61111 "DCADV QR Code OnRegister"
 {
-    TableNo = "CDC Document";
-
+    [EventSubscriber(ObjectType::Codeunit, Codeunit::"CDC Purch. - Register", 'OnAfterRegister', '', true, true)]
+    local procedure PurchaseInvoiceOnAfterRegister(var Document: Record "CDC Document")
     var
+
         QRCodeHandler: Codeunit "DCADV QR Code Management";
-        PurchaseHeader: Record 38;
+        PurchaseHeader: Record "Purchase Header";
         VendorBank: Record "Vendor Bank Account";
         BankDirectory: Record "Bank Directory";
         QR_IBAN: Text;
         Clearing: Text;
         NewVendBankCode: Code[10];
-
-    trigger OnRun()
+        VendBankCodeCounter: Integer;
     begin
+
         // check if we can find and read a qr code in the current document
-        if QRCodeHandler.ReadSwissPaymentQRCodeInDocument(Rec) then begin
+        if QRCodeHandler.ReadSwissPaymentQRCodeInDocument(Document) then begin
             // Get the created purchase document
-            if not PurchaseHeader.GET(Rec."Created Doc. Subtype", Rec."Created Doc. No.") then
+            if not PurchaseHeader.GET(Document."Created Doc. Subtype", Document."Created Doc. No.") then
                 exit;
 
-            //Kreditorenbank prüfen ob QR Bankzahlung Inland für Kreditor vorhanden
+            //Vendor bank check if domestic QR bank payment record for current vendor exists
             QR_IBAN := QRCodeHandler.GetIBAN();
             IF STRLEN(QR_IBAN) = 21 THEN BEGIN
                 VendorBank.Reset();
@@ -27,28 +28,17 @@ codeunit 61111 "DCADV QR Code OnRegister"
                 VendorBank.SetRange("Payment Form", VendorBank."Payment Form"::"Bank Payment Domestic");
                 VendorBank.SetRange(IBAN, QR_IBAN);
                 IF VendorBank.FindFirst() THEN begin
-                    //Falls Ja -> Bankcode in Rechnung validieren
+                    //If Yes -> validate bank code in invoice
                     PurchaseHeader.Validate("Bank Code", VendorBank.Code);
                 end else begin
-                    //Falls Nein -> Kreditor Bankkonto anlegen: - QR-IBAN abfüllen + SWIFT Code suchen von QR-IBAN ab Feld 5 (5 Stellen) in Bank Directory Clearing
+                    //If No -> Create vendor bank account: - Fill in QR-IBAN + search SWIFT code of QR-IBAN from field 5 (5 digits) in Bank Directory Clearing
 
-                    NewVendBankCode := 'QR-1';
-                    IF VendorBank.Get(PurchaseHeader."Buy-from Vendor No.", NewVendBankCode) then
-                        NewVendBankCode := 'QR-2';
-                    IF VendorBank.Get(PurchaseHeader."Buy-from Vendor No.", NewVendBankCode) then
-                        NewVendBankCode := 'QR-3';
-                    IF VendorBank.Get(PurchaseHeader."Buy-from Vendor No.", NewVendBankCode) then
-                        NewVendBankCode := 'QR-4';
-                    IF VendorBank.Get(PurchaseHeader."Buy-from Vendor No.", NewVendBankCode) then
-                        NewVendBankCode := 'QR-5';
-                    IF VendorBank.Get(PurchaseHeader."Buy-from Vendor No.", NewVendBankCode) then
-                        NewVendBankCode := 'QR-6';
-                    IF VendorBank.Get(PurchaseHeader."Buy-from Vendor No.", NewVendBankCode) then
-                        NewVendBankCode := 'QR-7';
-                    IF VendorBank.Get(PurchaseHeader."Buy-from Vendor No.", NewVendBankCode) then
-                        NewVendBankCode := 'QR-8';
-                    IF VendorBank.Get(PurchaseHeader."Buy-from Vendor No.", NewVendBankCode) then
-                        NewVendBankCode := 'QR-9';
+                    repeat
+                        VendBankCodeCounter += 1;
+                        NewVendBankCode := StrSubstNo('QR-%1', VendBankCodeCounter);
+                    until (not VendorBank.Get(PurchaseHeader."Buy-from Vendor No.", NewVendBankCode) or (VendBankCodeCounter >= 100));
+                    IF VendBankCodeCounter >= 100 then
+                        NewVendBankCode := 'QR-XXX';
 
                     VendorBank.Reset();
                     VendorBank.Init();

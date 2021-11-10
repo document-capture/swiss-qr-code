@@ -12,17 +12,19 @@
   "logo": "./res/images/logo.png",
   "dependencies": [
     {
-      "id": "4b915d7e-c02a-435f-85ab-649086c1e002",
-      "name": "Continia Core",
-      "publisher": "Continia Software",
-      "version": "5.0.0.0"
-    },
-    {
-      "id": "6da8dd2f-e698-461f-9147-8e404244dd85",
-      "name": "Continia Document Capture 365",
-      "publisher": "Continia Software",
-      "version": "8.0.0.0"
+      "id": "6da8dd2f-e698-461f-9147-8e404244dd85", 
+      "name": "Continia Document Capture 365", 
+      "publisher": "Continia Software", 
+      "version": "7.2.0.1"
     }
+    ,
+    {
+      "id": "98860128-1333-4598-a3da-0590804648b7", 
+      "name": "QR-Bill Management for Switzerland", 
+      "publisher": "Microsoft", 
+      "version": "18.1.24822.26330"
+    }
+
   ],
   "screenshots": [],
   "platform": "1.0.0.0",

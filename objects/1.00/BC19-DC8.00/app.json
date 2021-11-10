@@ -1,26 +1,39 @@
 {
-  "id": "526feeb5-4f8c-4667-bd6d-60e14a8d66b1",
-  "name": "Document Capture QR-Code Management",
-  "publisher": "Continia Partner",
+  "id": "f27aa103-a4c5-4886-a6d0-60134c884e26",
+  "name": "DC Advanced Swiss QR-Code Management",
+  "publisher": "github.com/document-capture",
   "version": "1.0.0.0",
   "brief": "",
-  "description": "This app enables Document Capture to register an invoice that contains the Swiss Payment QR-Code",
+  "description": "Enhancement of standard Document Capture to register an invoice that contains a Swiss QR-Code",
   "privacyStatement": "",
   "EULA": "",
-  "help": "",
-  "url": "https://www.documentcapture.com",
-  "logo": "logo.png",
-  "dependencies": [],
-  "screenshots": [],
-  "platform": "14.0.0.0",
-  "application": "14.0.0.0",
-  "idRanges": [
+  "help": "https://github.com/document-capture/advanced-move-to-company",
+  "url": "https://github.com/document-capture/advanced-move-to-company",
+  "logo": "./res/images/logo.png",
+  "dependencies": [
     {
-      "from": 88800,
-      "to": 88810
+      "id": "4b915d7e-c02a-435f-85ab-649086c1e002",
+      "name": "Continia Core",
+      "publisher": "Continia Software",
+      "version": "5.0.0.0"
+    },
+    {
+      "id": "6da8dd2f-e698-461f-9147-8e404244dd85",
+      "name": "Continia Document Capture 365",
+      "publisher": "Continia Software",
+      "version": "8.0.0.0"
     }
   ],
-  "contextSensitiveHelpUrl": "https://CDC-QR-Management.com/help/",
+  "screenshots": [],
+  "platform": "1.0.0.0",
+  "application": "19.0.0.0",
+  "idRanges": [
+    {
+      "from": 61110,
+      "to": 61119
+    }
+  ],
+  "contextSensitiveHelpUrl": "https://github.com/document-capture/swiss-qr-code/wiki/",
   "showMyCode": true,
-  "runtime": "3.0"
+  "runtime": "7.0"
 }

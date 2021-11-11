@@ -10,4 +10,4 @@ This version is developed for Business Central Version 2021 Fall Relese (19)
 You can use this code as it is, without any warranty or official support by the repository owner or [Continia Software](https://www.continia.com "Continia Software").
 
 ## Credits ##
-Thanks to Business Central partner [Implevit](www.implevit.ch) that has updated the code to Business Central version 19.
+Thanks to Business Central partner [Implevit](https://www.implevit.ch) that has updated the code to Business Central version 19.

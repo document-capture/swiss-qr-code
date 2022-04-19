@@ -1,9 +1,9 @@
-OBJECT Codeunit 61110 PTE DC QR Code Management
+OBJECT Codeunit 61110 PTE DC Swiss QR Bill Mgt.
 {
   OBJECT-PROPERTIES
   {
     Date=04/19/22;
-    Time=10:35:26 AM;
+    Time=[ 2:31:34 PM];
     Modified=Yes;
     Version List=PTE-QRBILL2.00.00;
   }
@@ -128,7 +128,7 @@ OBJECT Codeunit 61110 PTE DC QR Code Management
       ProcessQRCodeOnDocument(Document);
     END;
 
-    [Business(TRUE)]
+    [Integration(TRUE)]
     [External]
     LOCAL PROCEDURE OnBeForeProcessQRCodeOnDocument@3(VAR Document@1000 : Record 6085590;VAR Handled@1001 : Boolean);
     BEGIN
@@ -136,7 +136,8 @@ OBJECT Codeunit 61110 PTE DC QR Code Management
 
     BEGIN
     {
-      // You could setup this codeunit on each individual template or let it execute by the PurchaseInvoiceOnAfterRegister event subscriber
+      You could setup this codeunit on each individual template in the OnAfterRegistration Codeunit or
+      let it execute by the PurchaseInvoiceOnAfterRegister event subscriber (uncomment first)
     }
     END.
   }

@@ -1,0 +1,144 @@
+OBJECT Codeunit 61110 PTE DC QR Code Management
+{
+  OBJECT-PROPERTIES
+  {
+    Date=04/19/22;
+    Time=10:35:26 AM;
+    Modified=Yes;
+    Version List=PTE-QRBILL2.00.00;
+  }
+  PROPERTIES
+  {
+    TableNo=6085590;
+    OnRun=BEGIN
+            ProcessQRCodeOnDocument(Rec);
+          END;
+
+  }
+  CODE
+  {
+
+    LOCAL PROCEDURE ProcessQRCodeOnDocument@1(VAR Document@1000 : Record 6085590);
+    VAR
+      ProcessQRCodeOnDocumentHandled@1001 : Boolean;
+    BEGIN
+      OnBeForeProcessQRCodeOnDocument(Document,ProcessQRCodeOnDocumentHandled);
+
+      IF ProcessQRCodeOnDocumentHandled THEN
+        EXIT;
+
+      ReadQRBillCodeInDocument(Document);
+    END;
+
+    LOCAL PROCEDURE ReadQRBillCodeInDocument@7(VAR Document@1000 : Record 6085590) : Boolean;
+    VAR
+      CDCDocumentWord@1001 : Record 6085592;
+      SwissQRBillBuffer@1005 : Record 11502;
+      PurchaseHeader@1009 : Record 38;
+      SwissQRBillDecode@1002 : Codeunit 11512;
+      QRBillInStream@1003 : InStream;
+      QRBillContent@1004 : Text;
+      CurrentQRCodeLine@1006 : Text;
+      CrLf@1007 : Text;
+      ValidQRBillCodeFound@1008 : Boolean;
+    BEGIN
+      CDCDocumentWord.SETRANGE("Document No.", Document."No.");
+      CDCDocumentWord.SETRANGE("Barcode Type", 'QRCODE');
+      IF CDCDocumentWord.ISEMPTY THEN
+          EXIT(FALSE);  //no QR-Bill code found
+
+      CrLf[1] := 13;
+      CrLf[2] := 10;
+
+      CDCDocumentWord.FINDSET;
+      REPEAT
+        CDCDocumentWord.CALCFIELDS(Data);
+        IF CDCDocumentWord.Data.HASVALUE THEN BEGIN
+          CDCDocumentWord.Data.CREATEINSTREAM(QRBillInStream);
+          WHILE (NOT QRBillInStream.EOS) DO BEGIN
+            QRBillInStream.READTEXT(CurrentQRCodeLine);
+            QRBillContent += CurrentQRCodeLine + CrLf;
+            CLEAR(CurrentQRCodeLine);
+          END;
+          ValidQRBillCodeFound := SwissQRBillDecode.DecodeQRCodeText(SwissQRBillBuffer,QRBillContent);
+        END;
+      UNTIL (CDCDocumentWord.NEXT = 0) OR (ValidQRBillCodeFound);
+
+      IF NOT ValidQRBillCodeFound THEN
+        EXIT(FALSE);
+
+      // Get the created purchase document
+      IF NOT PurchaseHeader.GET(Document."Created Doc. Subtype", Document."Created Doc. No.") THEN
+        EXIT;
+
+      PurchaseHeader.VALIDATE("Bank Code", GetVendorBankCode(Document,PurchaseHeader,SwissQRBillBuffer));
+      PurchaseHeader.VALIDATE("Swiss QRBill", TRUE);
+      PurchaseHeader.VALIDATE("Swiss QRBill Amount", SwissQRBillBuffer.Amount);
+      PurchaseHeader.VALIDATE("Swiss QRBill IBAN", SwissQRBillBuffer.IBAN);
+      PurchaseHeader.VALIDATE("Swiss QRBill Bill Info", SwissQRBillBuffer."Billing Information");
+      PurchaseHeader.VALIDATE("Swiss QRBill Currency", SwissQRBillBuffer.Currency);
+      PurchaseHeader.VALIDATE("Swiss QRBill Unstr. Message", SwissQRBillBuffer."Unstructured Message");
+      PurchaseHeader.VALIDATE("Payment Reference", SwissQRBillBuffer."Payment Reference");
+      PurchaseHeader.MODIFY(TRUE);
+      COMMIT;
+    END;
+
+    LOCAL PROCEDURE GetVendorBankCode@5(Document@1000 : Record 6085590;PurchaseHeader@1001 : Record 38;VAR SwissQRBillBuffer@1002 : Record 11502) : Code[20];
+    VAR
+      VendorBankAccount@1003 : Record 288;
+      BankDirectory@1007 : Record 11500;
+      VendBankCodeCounter@1004 : Integer;
+      VendBankCode@1005 : Code[20];
+      Clearing@1006 : Text;
+    BEGIN
+      VendorBankAccount.RESET();
+      VendorBankAccount.SETRANGE("Vendor No.", PurchaseHeader."Buy-from Vendor No.");
+      VendorBankAccount.SETRANGE("Payment Form", VendorBankAccount."Payment Form"::"Bank Payment Domestic");
+      VendorBankAccount.SETRANGE(IBAN, SwissQRBillBuffer.IBAN);
+      IF NOT VendorBankAccount.FINDFIRST() THEN BEGIN
+        //If No -> Create vendor bank account: - Fill in QR-IBAN + search SWIFT code of QR-IBAN from field 5 (5 digits) in Bank Directory Clearing
+        REPEAT
+          VendBankCodeCounter += 1;
+          VendBankCode := STRSUBSTNO('QR-%1', VendBankCodeCounter);
+        UNTIL (NOT VendorBankAccount.GET(PurchaseHeader."Buy-from Vendor No.", VendBankCode) OR (VendBankCodeCounter >= 100));
+        IF VendBankCodeCounter >= 100 THEN
+          VendBankCode := 'QR-XXX';
+
+        VendorBankAccount.RESET();
+        VendorBankAccount.INIT();
+        VendorBankAccount.VALIDATE("Vendor No.", PurchaseHeader."Buy-from Vendor No.");
+        VendorBankAccount.VALIDATE(Code, VendBankCode);
+        VendorBankAccount.INSERT(TRUE);
+        VendorBankAccount.VALIDATE("Payment Form", VendorBankAccount."Payment Form"::"Bank Payment Domestic");
+        VendorBankAccount.VALIDATE(IBAN, SwissQRBillBuffer.IBAN);
+        //SWIFT
+        Clearing := COPYSTR(SwissQRBillBuffer.IBAN, 5, 5);
+        IF BankDirectory.GET(Clearing) THEN BEGIN
+            VendorBankAccount.VALIDATE("SWIFT Code", BankDirectory."SWIFT Address");
+        END;
+        VendorBankAccount.MODIFY(TRUE);
+      END;
+
+      EXIT(VendorBankAccount.Code);
+    END;
+
+    [EventSubscriber(Codeunit,6085706,OnAfterRegister)]
+    LOCAL PROCEDURE PurchaseInvoiceOnAfterRegister@2(VAR Document@1000 : Record 6085590);
+    BEGIN
+      ProcessQRCodeOnDocument(Document);
+    END;
+
+    [Business(TRUE)]
+    [External]
+    LOCAL PROCEDURE OnBeForeProcessQRCodeOnDocument@3(VAR Document@1000 : Record 6085590;VAR Handled@1001 : Boolean);
+    BEGIN
+    END;
+
+    BEGIN
+    {
+      // You could setup this codeunit on each individual template or let it execute by the PurchaseInvoiceOnAfterRegister event subscriber
+    }
+    END.
+  }
+}
+

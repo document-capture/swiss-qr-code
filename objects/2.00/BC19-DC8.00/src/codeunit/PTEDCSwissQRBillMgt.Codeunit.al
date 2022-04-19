@@ -8,7 +8,7 @@ Codeunit 61110 "PTE DC Swiss QR-Bill Mgt."
         ProcessQRCodeOnDocument(Rec);
     end;
 
-    local procedure ProcessQRCodeerOnDocument(var Document: Record "CDC Document"): Boolean
+    local procedure ProcessQRCodeOnDocument(var Document: Record "CDC Document"): Boolean
     var
         CDCDocumentWord: Record 6085592;
         SwissQRBillBuffer: Record "Swiss QR-Bill Buffer";

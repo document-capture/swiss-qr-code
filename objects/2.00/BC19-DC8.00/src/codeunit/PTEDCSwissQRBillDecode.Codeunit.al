@@ -40,11 +40,19 @@ codeunit 61111 "PTE DC Swiss QR-Bill Decode"
     end;
 
     internal procedure DecodeQRCodeText(var SwissQRBillBuffer: Record "Swiss QR-Bill Buffer"; QRCodeText: Text): Boolean
+    var
+        currEntryNo: Integer;
     begin
+        currEntryNo := SwissQRBillBuffer."Entry No.";
+        currEntryNo += 1;
         Clear(SwissQRBillBuffer);
+        TempNameValueBuffer.DeleteAll();
 
         if not InitializeLineBuffer(QRCodeText) then
             exit(false);
+
+        SwissQRBillBuffer."Entry No." := currEntryNo;
+
 
         if not ReadHeader() then
             exit(false);
@@ -71,15 +79,16 @@ codeunit 61111 "PTE DC Swiss QR-Bill Decode"
             exit(not AnyErrorLogged());
         ReadNextLineIntoFieldNo(SwissQRBillBuffer, SwissQRBillBuffer.FieldNo("Alt. Procedure Value 2"), '');
         ParseAltProcedures(SwissQRBillBuffer);
+
+        SwissQRBillBuffer.Insert();
+
         exit(not AnyErrorLogged());
     end;
 
     local procedure ParseAltProcedures(var SwissQRBillBuffer: Record "Swiss QR-Bill Buffer")
     begin
-        with SwissQRBillBuffer do begin
-            ParseAltProcedure("Alt. Procedure Name 1", "Alt. Procedure Value 1", 'AV1');
-            ParseAltProcedure("Alt. Procedure Name 2", "Alt. Procedure Value 2", 'AV2');
-        end;
+        ParseAltProcedure(SwissQRBillBuffer."Alt. Procedure Name 1", SwissQRBillBuffer."Alt. Procedure Value 1", 'AV1');
+        ParseAltProcedure(SwissQRBillBuffer."Alt. Procedure Name 2", SwissQRBillBuffer."Alt. Procedure Value 2", 'AV2');
     end;
 
     local procedure ParseAltProcedure(var NameText: Text[10]; var ValueText: Text[100]; defaultName: Text[10])
@@ -232,23 +241,22 @@ codeunit 61111 "PTE DC Swiss QR-Bill Decode"
         if not ReadNextLineAndTestValue(ReferenceTypeText, PmtReferenceTypeNotFoundLbl) then
             exit(false);
 
-        with SwissQRBillBuffer do
-            case ReferenceTypeText of
-                'QRR':
-                    begin
-                        "IBAN Type" := "IBAN Type"::"QR-IBAN";
-                        "Payment Reference Type" := "Payment Reference Type"::"QR Reference";
-                    end;
-                'SCOR':
-                    begin
-                        "IBAN Type" := "IBAN Type"::IBAN;
-                        "Payment Reference Type" := "Payment Reference Type"::"Creditor Reference (ISO 11649)";
-                    end;
-                'NON':
-                    "Payment Reference Type" := "Payment Reference Type"::"Without Reference";
-                else
-                    LogErrorAndExit(UnknownPmtReferenceTypeLbl, true, false);
-            end;
+        case ReferenceTypeText of
+            'QRR':
+                begin
+                    SwissQRBillBuffer."IBAN Type" := SwissQRBillBuffer."IBAN Type"::"QR-IBAN";
+                    SwissQRBillBuffer."Payment Reference Type" := SwissQRBillBuffer."Payment Reference Type"::"QR Reference";
+                end;
+            'SCOR':
+                begin
+                    SwissQRBillBuffer."IBAN Type" := SwissQRBillBuffer."IBAN Type"::IBAN;
+                    SwissQRBillBuffer."Payment Reference Type" := SwissQRBillBuffer."Payment Reference Type"::"Creditor Reference (ISO 11649)";
+                end;
+            'NON':
+                SwissQRBillBuffer."Payment Reference Type" := SwissQRBillBuffer."Payment Reference Type"::"Without Reference";
+            else
+                LogErrorAndExit(UnknownPmtReferenceTypeLbl, true, false);
+        end;
 
         exit(ReadCheckAndValidateReferenceNo(SwissQRBillBuffer));
     end;
@@ -261,23 +269,21 @@ codeunit 61111 "PTE DC Swiss QR-Bill Decode"
             exit(false);
 
         PaymentReferenceNoText := DelChr(PaymentReferenceNoText);
-        with SwissQRBillBuffer do begin
-            case "Payment Reference Type" of
-                "Payment Reference Type"::"QR Reference":
-                    if StrLen(PaymentReferenceNoText) <> 27 then
-                        exit(LogErrorAndExit(QRReferenceLengthLbl, true, true));
-                "Payment Reference Type"::"Creditor Reference (ISO 11649)":
-                    if (StrLen(PaymentReferenceNoText) > 25) or
-                       (StrLen(PaymentReferenceNoText) < 5) or
-                       (CopyStr(PaymentReferenceNoText, 1, 2) <> 'RF')
-                    then
-                        exit(LogErrorAndExit(CreditorReferenceLengthLbl, true, true));
-                "Payment Reference Type"::"Without Reference":
-                    if StrLen(PaymentReferenceNoText) > 0 then
-                        exit(LogErrorAndExit(BlankedReferenceExpectedLbl, true, true));
-            end;
-            "Payment Reference" := CopyStr(PaymentReferenceNoText, 1, MaxStrLen("Payment Reference"));
+        case SwissQRBillBuffer."Payment Reference Type" of
+            SwissQRBillBuffer."Payment Reference Type"::"QR Reference":
+                if StrLen(PaymentReferenceNoText) <> 27 then
+                    exit(LogErrorAndExit(QRReferenceLengthLbl, true, true));
+            SwissQRBillBuffer."Payment Reference Type"::"Creditor Reference (ISO 11649)":
+                if (StrLen(PaymentReferenceNoText) > 25) or
+                   (StrLen(PaymentReferenceNoText) < 5) or
+                   (CopyStr(PaymentReferenceNoText, 1, 2) <> 'RF')
+                then
+                    exit(LogErrorAndExit(CreditorReferenceLengthLbl, true, true));
+            SwissQRBillBuffer."Payment Reference Type"::"Without Reference":
+                if StrLen(PaymentReferenceNoText) > 0 then
+                    exit(LogErrorAndExit(BlankedReferenceExpectedLbl, true, true));
         end;
+        SwissQRBillBuffer."Payment Reference" := CopyStr(PaymentReferenceNoText, 1, MaxStrLen(SwissQRBillBuffer."Payment Reference"));
 
         exit(true);
     end;
@@ -321,16 +327,14 @@ codeunit 61111 "PTE DC Swiss QR-Bill Decode"
         if not ReadNextLine(Country, true) then
             exit(false);
 
-        with Customer do begin
-            Name := CopyStr(NewName, 1, MaxStrLen(Name));
-            Address := CopyStr(AddressLine1, 1, MaxStrLen(Address));
-            "Address 2" := CopyStr(AddressLine2, 1, MaxStrLen("Address 2"));
-            if AddressType = 'S' then begin
-                "Post Code" := CopyStr(PostalCode, 1, MaxStrLen("Post Code"));
-                City := CopyStr(NewCity, 1, MaxStrLen(City));
-            end;
-            "Country/Region Code" := CopyStr(Country, 1, MaxStrLen("Country/Region Code"));
+        Customer.Name := CopyStr(NewName, 1, MaxStrLen(Customer.Name));
+        Customer.Address := CopyStr(AddressLine1, 1, MaxStrLen(Customer.Address));
+        Customer."Address 2" := CopyStr(AddressLine2, 1, MaxStrLen(Customer."Address 2"));
+        if AddressType = 'S' then begin
+            Customer."Post Code" := CopyStr(PostalCode, 1, MaxStrLen(Customer."Post Code"));
+            Customer.City := CopyStr(NewCity, 1, MaxStrLen(Customer.City));
         end;
+        Customer."Country/Region Code" := CopyStr(Country, 1, MaxStrLen(Customer."Country/Region Code"));
 
         exit(true);
     end;

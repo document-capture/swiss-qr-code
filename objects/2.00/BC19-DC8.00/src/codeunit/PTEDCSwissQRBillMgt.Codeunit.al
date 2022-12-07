@@ -11,14 +11,17 @@ Codeunit 61110 "PTE DC Swiss QR-Bill Mgt."
     local procedure ProcessQRCodeOnDocument(var Document: Record "CDC Document"): Boolean
     var
         CDCDocumentWord: Record 6085592;
-        SwissQRBillBuffer: Record "Swiss QR-Bill Buffer";
+        TempSwissQRBillBuffer: Record "Swiss QR-Bill Buffer" temporary;
         PurchaseHeader: Record "Purchase Header";
         SwissQRBillDecode: Codeunit "PTE DC Swiss QR-Bill Decode";
         QRBillInStream: InStream;
         QRBillContent: Text;
         CurrentQRCodeLine: Text;
         CrLf: Text;
-        ValidQRBillCodeFound: Boolean;
+        ValidQRBillCodeFound: Integer;
+        SelectedQRCodeAmount: Integer;
+        MoreThanOneQRCodeOnDocumentLbl: Label 'There are two QR Codes on this document. Please select the amount of the correct QR Code:';
+        QRCodeSelectStr: Text;
     begin
         CDCDocumentWord.SETRANGE("Document No.", Document."No.");
         CDCDocumentWord.SETRANGE("Barcode Type", 'QRCODE');
@@ -30,6 +33,8 @@ Codeunit 61110 "PTE DC Swiss QR-Bill Mgt."
 
         CDCDocumentWord.FINDSET;
         repeat
+            Clear(QRBillContent);
+            Clear(QRBillInStream);
             CDCDocumentWord.CALCFIELDS(Data);
             if CDCDocumentWord.Data.HASVALUE THEN BEGIN
                 CDCDocumentWord.Data.CREATEINSTREAM(QRBillInStream);
@@ -38,27 +43,44 @@ Codeunit 61110 "PTE DC Swiss QR-Bill Mgt."
                     QRBillContent += CurrentQRCodeLine + CrLf;
                     CLEAR(CurrentQRCodeLine);
                 END;
-                ValidQRBillCodeFound := SwissQRBillDecode.DecodeQRCodeText(SwissQRBillBuffer, QRBillContent);
+                if SwissQRBillDecode.DecodeQRCodeText(TempSwissQRBillBuffer, QRBillContent) then
+                    ValidQRBillCodeFound += 1;
             END;
-        UNTIL (CDCDocumentWord.NEXT = 0) OR (ValidQRBillCodeFound);
+        UNTIL (CDCDocumentWord.NEXT = 0) OR (ValidQRBillCodeFound >= 2);
 
-        IF NOT ValidQRBillCodeFound THEN
-            EXIT(FALSE);
+        IF ValidQRBillCodeFound = 0 THEN
+            exit(false);
+
+        if (ValidQRBillCodeFound = 1) or (not GuiAllowed) then
+            TempSwissQRBillBuffer.Get(ValidQRBillCodeFound)
+        else begin
+            TempSwissQRBillBuffer.Get(1);
+            QRCodeSelectStr := Format(Round(TempSwissQRBillBuffer.Amount, 0.01, '='), 0, '<Precision,2:2><Sign><Integer Thousand><1000Character,''><Decimals><Comma,.>');
+
+            TempSwissQRBillBuffer.Get(2);
+            QRCodeSelectStr += ',' + Format(Round(TempSwissQRBillBuffer.Amount, 0.01, '='), 0, '<Precision,2:2><Sign><Integer Thousand><1000Character,''><Decimals><Comma,.>');
+
+            SelectedQRCodeAmount := Dialog.StrMenu(QRCodeSelectStr, 1, MoreThanOneQRCodeOnDocumentLbl);
+            if SelectedQRCodeAmount > 0 then
+                TempSwissQRBillBuffer.Get(SelectedQRCodeAmount)
+            else
+                exit(false);
+        end;
+
 
         // Get the created purchase document
         IF NOT PurchaseHeader.GET(Document."Created Doc. Subtype", Document."Created Doc. No.") THEN
             EXIT;
 
-        PurchaseHeader.VALIDATE("Bank Code", GetVendorBankCode(Document, PurchaseHeader, SwissQRBillBuffer));
+        PurchaseHeader.VALIDATE("Bank Code", GetVendorBankCode(Document, PurchaseHeader, TempSwissQRBillBuffer));
         PurchaseHeader.VALIDATE("Swiss QR-Bill", TRUE);
-        PurchaseHeader.VALIDATE("Swiss QR-Bill Amount", SwissQRBillBuffer.Amount);
-        PurchaseHeader.VALIDATE("Swiss QR-Bill IBAN", SwissQRBillBuffer.IBAN);
-        PurchaseHeader.VALIDATE("Swiss QR-Bill Bill Info", SwissQRBillBuffer."Billing Information");
-        PurchaseHeader.VALIDATE("Swiss QR-Bill Currency", SwissQRBillBuffer.Currency);
-        PurchaseHeader.VALIDATE("Swiss QR-Bill Unstr. Message", SwissQRBillBuffer."Unstructured Message");
-        PurchaseHeader.VALIDATE("Payment Reference", SwissQRBillBuffer."Payment Reference");
+        PurchaseHeader.VALIDATE("Swiss QR-Bill Amount", TempSwissQRBillBuffer.Amount);
+        PurchaseHeader.VALIDATE("Swiss QR-Bill IBAN", TempSwissQRBillBuffer.IBAN);
+        PurchaseHeader.VALIDATE("Swiss QR-Bill Bill Info", TempSwissQRBillBuffer."Billing Information");
+        PurchaseHeader.VALIDATE("Swiss QR-Bill Currency", TempSwissQRBillBuffer.Currency);
+        PurchaseHeader.VALIDATE("Swiss QR-Bill Unstr. Message", TempSwissQRBillBuffer."Unstructured Message");
+        PurchaseHeader.VALIDATE("Payment Reference", TempSwissQRBillBuffer."Payment Reference");
         PurchaseHeader.MODIFY(TRUE);
-        COMMIT;
     end;
 
     local procedure GetVendorBankCode(Document: Record 6085590; PurchaseHeader: Record "Purchase Header"; var SwissQRBillBuffer: Record "Swiss QR-Bill Buffer"): Code[20];

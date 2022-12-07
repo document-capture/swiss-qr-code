@@ -2,7 +2,7 @@
   "id": "f27aa103-a4c5-4886-a6d0-60134c884e26",
   "name": "PTE DC Swiss QR-Bill Management",
   "publisher": "github.com/document-capture",
-  "version": "2.0.0.0",
+  "version": "2.1.0.0",
   "brief": "",
   "description": "Enhancement of standard Document Capture to register an invoice that contains a Swiss QR-Code",
   "privacyStatement": "",

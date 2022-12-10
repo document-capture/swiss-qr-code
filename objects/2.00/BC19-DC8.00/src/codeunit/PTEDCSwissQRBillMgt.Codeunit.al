@@ -11,17 +11,18 @@ Codeunit 61110 "PTE DC Swiss QR-Bill Mgt."
     local procedure ProcessQRCodeOnDocument(var Document: Record "CDC Document"): Boolean
     var
         CDCDocumentWord: Record 6085592;
-        TempSwissQRBillBuffer: Record "Swiss QR-Bill Buffer" temporary;
         PurchaseHeader: Record "Purchase Header";
+        TempSwissQRBillBuffer: Record "Swiss QR-Bill Buffer" temporary;
+        TemplateField: Record "CDC Template Field";
+        FieldValue: Record "CDC Document Value";
+        CaptureMgt: codeunit "CDC Capture Management";
         SwissQRBillDecode: Codeunit "PTE DC Swiss QR-Bill Decode";
         QRBillInStream: InStream;
-        QRBillContent: Text;
-        CurrentQRCodeLine: Text;
-        CrLf: Text;
         ValidQRBillCodeFound: Integer;
-        SelectedQRCodeAmount: Integer;
-        MoreThanOneQRCodeOnDocumentLbl: Label 'There are two QR Codes on this document. Please select the amount of the correct QR Code:';
-        QRCodeSelectStr: Text;
+        CrLf: Text;
+        CurrentQRCodeLine: Text;
+        QRBillContent: Text;
+        Handled: Boolean;
     begin
         CDCDocumentWord.SETRANGE("Document No.", Document."No.");
         CDCDocumentWord.SETRANGE("Barcode Type", 'QRCODE');
@@ -48,29 +49,32 @@ Codeunit 61110 "PTE DC Swiss QR-Bill Mgt."
             END;
         UNTIL (CDCDocumentWord.NEXT = 0) OR (ValidQRBillCodeFound >= 2);
 
-        IF ValidQRBillCodeFound = 0 THEN
+        if ValidQRBillCodeFound = 0 then
             exit(false);
 
-        if (ValidQRBillCodeFound = 1) or (not GuiAllowed) then
-            TempSwissQRBillBuffer.Get(ValidQRBillCodeFound)
-        else begin
-            TempSwissQRBillBuffer.Get(1);
-            QRCodeSelectStr := Format(Round(TempSwissQRBillBuffer.Amount, 0.01, '='), 0, '<Precision,2:2><Sign><Integer Thousand><1000Character,''><Decimals><Comma,.>');
+        OnBeForeProcessQRCodeOnDocument(Document, TempSwissQRBillBuffer, Handled);
+        if Handled then
+            exit(true);
 
-            TempSwissQRBillBuffer.Get(2);
-            QRCodeSelectStr += ',' + Format(Round(TempSwissQRBillBuffer.Amount, 0.01, '='), 0, '<Precision,2:2><Sign><Integer Thousand><1000Character,''><Decimals><Comma,.>');
+        // get first valid QR code
+        TempSwissQRBillBuffer.Get(1);
 
-            SelectedQRCodeAmount := Dialog.StrMenu(QRCodeSelectStr, 1, MoreThanOneQRCodeOnDocumentLbl);
-            if SelectedQRCodeAmount > 0 then
-                TempSwissQRBillBuffer.Get(SelectedQRCodeAmount)
-            else
-                exit(false);
+        if (ValidQRBillCodeFound > 1) then begin
+
+            // Get the field value of the DC field Amount incl. VAT
+            TemplateField.Get(Document."Template No.", TemplateField.Type::Header, 'AMOUNTINCLVAT');
+            if CaptureMgt.GetFieldValue(Document, TemplateField, 0, FieldValue) then begin
+
+                // check if field value of amt. incl. vat is equal to the qr code
+                // if not equal, get the 2nd found valid qr code and transfer it's values into invoice
+                if FieldValue."Value (Decimal)" <> TempSwissQRBillBuffer.Amount then
+                    TempSwissQRBillBuffer.Get(2);
+            end;
         end;
 
-
         // Get the created purchase document
-        IF NOT PurchaseHeader.GET(Document."Created Doc. Subtype", Document."Created Doc. No.") THEN
-            EXIT;
+        if not PurchaseHeader.GET(Document."Created Doc. Subtype", Document."Created Doc. No.") then
+            exit;
 
         PurchaseHeader.VALIDATE("Bank Code", GetVendorBankCode(Document, PurchaseHeader, TempSwissQRBillBuffer));
         PurchaseHeader.VALIDATE("Swiss QR-Bill", TRUE);
@@ -87,8 +91,8 @@ Codeunit 61110 "PTE DC Swiss QR-Bill Mgt."
     var
         VendorBankAccount: Record 288;
         BankDirectory: Record 11500;
-        VendBankCodeCounter: Integer;
         VendBankCode: Code[20];
+        VendBankCodeCounter: Integer;
         Clearing: Text;
     begin
         VendorBankAccount.reset();
@@ -129,9 +133,7 @@ Codeunit 61110 "PTE DC Swiss QR-Bill Mgt."
     end;
 
     [IntegrationEvent(true, false)]
-    local procedure OnBeForeProcessQRCodeOnDocument(var Document: Record "CDC Document"; var Handled: Boolean)
+    local procedure OnBeForeProcessQRCodeOnDocument(var Document: Record "CDC Document"; var TempSwissQRBillBuffer: Record "Swiss QR-Bill Buffer"; var Handled: Boolean)
     begin
     end;
-
 }
-

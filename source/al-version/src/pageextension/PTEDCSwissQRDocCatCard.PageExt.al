@@ -1,6 +1,6 @@
 pageextension 61110 "PTE DC Swiss QR DocCat Card" extends "CDC Document Category Card"
 {
-    ContextSensitiveHelpPage = 'how-to-setup';
+    ContextSensitiveHelpPage = 'how-to-setup-and-enable';
 
     layout
     {

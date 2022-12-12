@@ -4,25 +4,32 @@ Codeunit 61110 "PTE DC Swiss QR-Bill Mgt."
 
     trigger OnRun()
     begin
-        ProcessQRCodeOnDocument(Rec);
+        TransferQRCodeToInvoice(Rec);
     end;
 
-    local procedure ProcessQRCodeOnDocument(var Document: Record "CDC Document"): Boolean
+    local procedure TransferQRCodeToInvoice(var Document: Record "CDC Document"): Boolean
     var
         FieldValue: Record "CDC Document Value";
         TemplateField: Record "CDC Template Field";
         PurchaseHeader: Record "Purchase Header";
+        DocCat: Record "CDC Document Category";
         TempSwissQRBillBuffer: Record "Swiss QR-Bill Buffer" temporary;
         CaptureMgt: codeunit "CDC Capture Management";
         Handled: Boolean;
         ValidQRBillCodeFound: Integer;
     begin
+        if not DocCat.Get(Document."Document Category Code") then
+            exit;
+
+        if not DocCat."Transfer QR Bill data" then
+            exit;
+
         ValidQRBillCodeFound := FindQRPaymentCodeInDocument(Document, TempSwissQRBillBuffer);
 
         if ValidQRBillCodeFound = 0 then
             exit(false);
 
-        OnBeForeProcessQRCodeOnDocument(Document, TempSwissQRBillBuffer, Handled);
+        OnBeForeTransferQRCodeToInvoice(Document, TempSwissQRBillBuffer, Handled);
         if Handled then
             exit(true);
 
@@ -98,20 +105,22 @@ Codeunit 61110 "PTE DC Swiss QR-Bill Mgt."
 
     local procedure IdentifyVendorFromQRCode(var Document: Record "CDC Document"): Boolean
     var
+        DocCat: Record "CDC Document Category";
         Template: Record "CDC Template";
         TempSwissQRBillBuffer: Record "Swiss QR-Bill Buffer" temporary;
-        VendorBankAccount: Record "Vendor Bank Account";
         Vendor: Record Vendor;
-        ValidQRBillCodeFound: Integer;
-        TooManyVendorsFound: Boolean;
-        DocCat: Record "CDC Document Category";
-        RecRef: RecordRef;
+        VendorBankAccount: Record "Vendor Bank Account";
         RecIDMgt: Codeunit "CDC Record ID Mgt.";
+        RecRef: RecordRef;
+        TooManyVendorsFound: Boolean;
         SourceID: Integer;
+        ValidQRBillCodeFound: Integer;
         QRIdentificationTxt: Label 'QR Bill IBAN: %1';
     begin
-        // TODO Implement a check if source record even found        if Document."Source Record No." 
         DocCat.GET(Document."Document Category Code");
+        if not DocCat."Identify Vendor from QR IBAN" then
+            exit;
+
         if DocCat."Source Table No." <> 23 then
             exit(false);
 
@@ -149,11 +158,21 @@ Codeunit 61110 "PTE DC Swiss QR-Bill Mgt."
 
     local procedure SetQRAmountInclVATFromQRCode(var Document: Record "CDC Document"; var TemplateField: Record "CDC Template Field"; var Word: Text[1024]): Boolean
     var
-        TempSwissQRBillBuffer: Record "Swiss QR-Bill Buffer" temporary;
+        DocCat: Record "CDC Document Category";
         DocumentValue: Record "CDC Document Value";
+        TempSwissQRBillBuffer: Record "Swiss QR-Bill Buffer" temporary;
         CaptureMgt: Codeunit "CDC Capture Management";
         ValidQRBillCodeFound: Integer;
     begin
+        if TemplateField.Code <> 'QRAMOUNTINCLVAT' then
+            exit;
+
+        if not DocCat.Get(Document."Document Category Code") then
+            exit;
+
+        if not (DocCat."Transfer QR Bill data" or DocCat."Validate QR Bill amount") then
+            exit;
+
         ValidQRBillCodeFound := FindQRPaymentCodeInDocument(Document, TempSwissQRBillBuffer);
         if ValidQRBillCodeFound = 0 then
             exit(false);
@@ -204,26 +223,32 @@ Codeunit 61110 "PTE DC Swiss QR-Bill Mgt."
 
     local procedure ValidateAmountsInclVat(var Document: Record "CDC Document"; var IsInvalid: Boolean)
     var
+        DocCat: Record "CDC Document Category";
         DocumentComment: Record "CDC Document Comment";
-        TemplateFieldQRAmount: Record "CDC Template Field";
         TemplateFieldAmount: Record "CDC Template Field";
+        TemplateFieldQRAmount: Record "CDC Template Field";
         CaptureMgt: Codeunit "CDC Capture Management";
         AmountInclVat: Decimal;
         QRAmountInclVat: Decimal;
         QRAmountDoNotMatchComment: Label 'The value of %1 (%2) is not equal to %3 (%4). Make sure that both values match.';
     begin
-        AmountInclVat := CaptureMgt.GetDecimal(Document, 0, 'AMOUNTINCLVAT', 0);
-        QRAmountInclVat := CaptureMgt.GetDecimal(Document, 0, 'QRAMOUNTINCLVAT', 0);
-        if QRAmountInclVat = 0 then
-            exit;
+        if DocCat.Get(Document."Document Category Code") then begin
+            if not DocCat."Validate QR Bill amount" then
+                exit;
 
-        if AmountInclVat <> QRAmountInclVat then begin
-            TemplateFieldQRAmount.Get(Document."Template No.", TemplateFieldQRAmount.type::Header, 'QRAMOUNTINCLVAT');
-            TemplateFieldAmount.Get(Document."Template No.", TemplateFieldAmount.type::Header, 'AMOUNTINCLVAT');
+            AmountInclVat := CaptureMgt.GetDecimal(Document, 0, 'AMOUNTINCLVAT', 0);
+            QRAmountInclVat := CaptureMgt.GetDecimal(Document, 0, 'QRAMOUNTINCLVAT', 0);
+            if QRAmountInclVat = 0 then
+                exit;
 
-            DocumentComment.Add(Document, TemplateFieldQRAmount, 0, DocumentComment.Area::Validation, DocumentComment."Comment Type"::Error,
-                                  STRSUBSTNO(QRAmountDoNotMatchComment, TemplateFieldAmount."Field Name", AmountInclVat, TemplateFieldQRAmount."Field Name", QRAmountInclVat));
-            IsInvalid := true;
+            if AmountInclVat <> QRAmountInclVat then begin
+                TemplateFieldQRAmount.Get(Document."Template No.", TemplateFieldQRAmount.type::Header, 'QRAMOUNTINCLVAT');
+                TemplateFieldAmount.Get(Document."Template No.", TemplateFieldAmount.type::Header, 'AMOUNTINCLVAT');
+
+                DocumentComment.Add(Document, TemplateFieldQRAmount, 0, DocumentComment.Area::Validation, DocumentComment."Comment Type"::Error,
+                                      STRSUBSTNO(QRAmountDoNotMatchComment, TemplateFieldAmount."Field Name", AmountInclVat, TemplateFieldQRAmount."Field Name", QRAmountInclVat));
+                IsInvalid := true;
+            end;
         end;
     end;
 
@@ -231,7 +256,7 @@ Codeunit 61110 "PTE DC Swiss QR-Bill Mgt."
     [EventSubscriber(ObjectType::Codeunit, Codeunit::"CDC Purch. - Register", 'OnAfterRegister', '', true, true)]
     local procedure PurchaseInvoiceOnAfterRegister(var Document: Record "CDC Document")
     begin
-        ProcessQRCodeOnDocument(Document);
+        TransferQRCodeToInvoice(Document);
     end;
 
     [EventSubscriber(ObjectType::Codeunit, Codeunit::"CDC Capture Engine", 'OnBeforeFindDocumentSource', '', true, true)]
@@ -243,16 +268,9 @@ Codeunit 61110 "PTE DC Swiss QR-Bill Mgt."
     [EventSubscriber(ObjectType::Codeunit, Codeunit::"CDC Capture Engine", 'OnBeforeCaptureField2', '', false, false)]
     local procedure CaptureEngineOnBeforeCaptureField2(var Document: Record "CDC Document"; PageNo: Integer; var Field: Record "CDC Template Field"; UpdateFieldCaption: Boolean; var FieldCaption: Record "CDC Template Field Caption"; var Handled: Boolean; var Word: Text[1024])
     begin
-        if Field.Code <> 'QRAMOUNTINCLVAT' then
-            exit;
+
         Handled := SetQRAmountInclVATFromQRCode(Document, Field, Word);
     end;
-
-    // [EventSubscriber(ObjectType::Codeunit, Codeunit::"CDC Capture Engine", 'OnBeforeAutoDelegateDocument', '', false, false)]
-    // local procedure CaptureEngineOnBeforeAutoDelegateDocument(var Document: Record "CDC Document"; var IsHandled: Boolean)
-    // begin
-    //     ValidateAmountsInclVat(Document);
-    // end;
 
     [EventSubscriber(ObjectType::Codeunit, Codeunit::"CDC Purch. - Validation", 'OnBeforeValidateAmtAccounts', '', false, false)]
     local procedure PurchValidationOnBeforeValidateAmtAccounts(var Document: Record "CDC Document"; var Template: Record "CDC Template"; var IsInvalid: Boolean; var IsHandled: Boolean)
@@ -261,7 +279,7 @@ Codeunit 61110 "PTE DC Swiss QR-Bill Mgt."
     end;
 
     [IntegrationEvent(true, false)]
-    local procedure OnBeForeProcessQRCodeOnDocument(var Document: Record "CDC Document"; var TempSwissQRBillBuffer: Record "Swiss QR-Bill Buffer"; var Handled: Boolean)
+    local procedure OnBeForeTransferQRCodeToInvoice(var Document: Record "CDC Document"; var TempSwissQRBillBuffer: Record "Swiss QR-Bill Buffer"; var Handled: Boolean)
     begin
     end;
 }

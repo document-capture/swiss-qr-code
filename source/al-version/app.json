@@ -37,5 +37,7 @@
   ],
   "contextSensitiveHelpUrl": "https://github.com/document-capture/swiss-qr-code/wiki/",
   "showMyCode": true,
-  "runtime": "7.0"
+  "runtime": "7.0",
+  "features": [ "TranslationFile"],
+  "supportedLocales": ["en-US","en-GB","de-DE","de-AT","de-CH"]
 }

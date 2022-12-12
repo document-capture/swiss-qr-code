@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xliff version="1.2" xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
+  <file datatype="xml" source-language="en-US" target-language="en-GB" original="PTE DC Swiss QR-Bill Management.g.xlf">
+    <body>
+      <group id="body">
+        <trans-unit id="Codeunit 3970447217 - Method 3195386454 - NamedType 3044700802" size-unit="char" translate="yes" xml:space="preserve">
+          <source>QR Amount incl. VAT</source>
+          <target>QR Amount incl. VAT</target>
+          <note from="Developer" annotates="general" priority="2"></note>
+          <note from="Xliff Generator" annotates="general" priority="3">Codeunit PTE DC Swiss QR Install Mgt - Method InsertQRAmtFieldToMasterTemplates - NamedType QRAmtInclFieldName</note>
+        </trans-unit>
+        <trans-unit id="Codeunit 1368837070 - NamedType 3609863065" size-unit="char" translate="yes" xml:space="preserve">
+          <source>Address type "S" or "K" is not found.</source>
+          <target>Address type "S" or "K" is not found.</target>
+          <note from="Developer" annotates="general" priority="2"></note>
+          <note from="Xliff Generator" annotates="general" priority="3">Codeunit PTE DC Swiss QR-Bill Decode - NamedType AddressTypeNotFoundLbl</note>
+        </trans-unit>
+        <trans-unit id="Codeunit 1368837070 - NamedType 2655798072" size-unit="char" translate="yes" xml:space="preserve">
+          <source>Blanked reference number is expected for reference type NON.</source>
+          <target>Blanked reference number is expected for reference type NON.</target>
+          <note from="Developer" annotates="general" priority="2"></note>
+          <note from="Xliff Generator" annotates="general" priority="3">Codeunit PTE DC Swiss QR-Bill Decode - NamedType BlankedReferenceExpectedLbl</note>
+        </trans-unit>
+        <trans-unit id="Codeunit 1368837070 - NamedType 651323602" size-unit="char" translate="yes" xml:space="preserve">
+          <source>Only CH and LI IBAN values are permitted.</source>
+          <target>Only CH and LI IBAN values are permitted.</target>
+          <note from="Developer" annotates="general" priority="2"></note>
+          <note from="Xliff Generator" annotates="general" priority="3">Codeunit PTE DC Swiss QR-Bill Decode - NamedType CreditorIBANCountryLbl</note>
+        </trans-unit>
+        <trans-unit id="Codeunit 1368837070 - NamedType 1355979382" size-unit="char" translate="yes" xml:space="preserve">
+          <source>Creditor's account value (IBAN or QR-IBAN) should be 21 chars length.</source>
+          <target>Creditor's account value (IBAN or QR-IBAN) should be 21 chars length.</target>
+          <note from="Developer" annotates="general" priority="2"></note>
+          <note from="Xliff Generator" annotates="general" priority="3">Codeunit PTE DC Swiss QR-Bill Decode - NamedType CreditorIBANLengthLbl</note>
+        </trans-unit>
+        <trans-unit id="Codeunit 1368837070 - NamedType 1657435727" size-unit="char" translate="yes" xml:space="preserve">
+          <source>Creditor's account value (IBAN or QR-IBAN) is not found.</source>
+          <target>Creditor's account value (IBAN or QR-IBAN) is not found.</target>
+          <note from="Developer" annotates="general" priority="2"></note>
+          <note from="Xliff Generator" annotates="general" priority="3">Codeunit PTE DC Swiss QR-Bill Decode - NamedType CreditorIBANNotFoundLbl</note>
+        </trans-unit>
+        <trans-unit id="Codeunit 1368837070 - NamedType 3405322095" size-unit="char" translate="yes" xml:space="preserve">
+          <source>Creditor-Reference must be up to 25 chars length and start with RF and two check digits.</source>
+          <target>Creditor-Reference must be up to 25 chars length and start with RF and two check digits.</target>
+          <note from="Developer" annotates="general" priority="2"></note>
+          <note from="Xliff Generator" annotates="general" priority="3">Codeunit PTE DC Swiss QR-Bill Decode - NamedType CreditorReferenceLengthLbl</note>
+        </trans-unit>
+        <trans-unit id="Codeunit 1368837070 - NamedType 1222565290" size-unit="char" translate="yes" xml:space="preserve">
+          <source>Currency is not found.</source>
+          <target>Currency is not found.</target>
+          <note from="Developer" annotates="general" priority="2"></note>
+          <note from="Xliff Generator" annotates="general" priority="3">Codeunit PTE DC Swiss QR-Bill Decode - NamedType CurrencyNotFoundLbl</note>
+        </trans-unit>
+        <trans-unit id="Codeunit 1368837070 - NamedType 1461455179" size-unit="char" translate="yes" xml:space="preserve">
+          <source>The file is empty.</source>
+          <target>The file is empty.</target>
+          <note from="Developer" annotates="general" priority="2"></note>
+          <note from="NAB AL Tool Refresh Xlf" annotates="general" priority="3"></note>
+          <note from="Xliff Generator" annotates="general" priority="3">Codeunit PTE DC Swiss QR-Bill Decode - NamedType EmptyFileLbl</note>
+        </trans-unit>
+        <trans-unit id="Codeunit 1368837070 - NamedType 2262322168" size-unit="char" translate="yes" xml:space="preserve">
+          <source>The line value is expected to be blanked.</source>
+          <target>The line value is expected to be blanked.</target>
+          <note from="Developer" annotates="general" priority="2"></note>
+          <note from="Xliff Generator" annotates="general" priority="3">Codeunit PTE DC Swiss QR-Bill Decode - NamedType ExpectedBlankedValueLbl</note>
+        </trans-unit>
+        <trans-unit id="Codeunit 1368837070 - NamedType 3751493492" size-unit="char" translate="yes" xml:space="preserve">
+          <source>Unexpected end of file.</source>
+          <target>Unexpected end of file.</target>
+          <note from="Developer" annotates="general" priority="2"></note>
+          <note from="Xliff Generator" annotates="general" priority="3">Codeunit PTE DC Swiss QR-Bill Decode - NamedType ExpectedEOFLbl</note>
+        </trans-unit>
+        <trans-unit id="Codeunit 1368837070 - NamedType 3098262022" size-unit="char" translate="yes" xml:space="preserve">
+          <source>File line %1: %2</source>
+          <target>File line %1: %2</target>
+          <note from="Developer" annotates="general" priority="2">%1 - line number, %2 - line text message</note>
+          <note from="Xliff Generator" annotates="general" priority="3">Codeunit PTE DC Swiss QR-Bill Decode - NamedType FileLineLbl</note>
+        </trans-unit>
+        <trans-unit id="Codeunit 1368837070 - NamedType 1413840450" size-unit="char" translate="yes" xml:space="preserve">
+          <source>Header coding type value 1 is not found.</source>
+          <target>Header coding type value 1 is not found.</target>
+          <note from="Developer" annotates="general" priority="2"></note>
+          <note from="Xliff Generator" annotates="general" priority="3">Codeunit PTE DC Swiss QR-Bill Decode - NamedType HeaderCodingTypeNotFoundLbl</note>
+        </trans-unit>
+        <trans-unit id="Codeunit 1368837070 - NamedType 2686324143" size-unit="char" translate="yes" xml:space="preserve">
+          <source>Header QR type value SPC is not found.</source>
+          <target>Header QR type value SPC is not found.</target>
+          <note from="Developer" annotates="general" priority="2"></note>
+          <note from="Xliff Generator" annotates="general" priority="3">Codeunit PTE DC Swiss QR-Bill Decode - NamedType HeaderSPCValueNotFoundLbl</note>
+        </trans-unit>
+        <trans-unit id="Codeunit 1368837070 - NamedType 2143403297" size-unit="char" translate="yes" xml:space="preserve">
+          <source>Header version value 0200 is not found.</source>
+          <target>Header version value 0200 is not found.</target>
+          <note from="Developer" annotates="general" priority="2"></note>
+          <note from="Xliff Generator" annotates="general" priority="3">Codeunit PTE DC Swiss QR-Bill Decode - NamedType HeaderVersionValueNotFoundLbl</note>
+        </trans-unit>
+        <trans-unit id="Codeunit 1368837070 - NamedType 2067689722" size-unit="char" translate="yes" xml:space="preserve">
+          <source>The Name value is not found.</source>
+          <target>The Name value is not found.</target>
+          <note from="Developer" annotates="general" priority="2"></note>
+          <note from="Xliff Generator" annotates="general" priority="3">Codeunit PTE DC Swiss QR-Bill Decode - NamedType NameNotFoundLbl</note>
+        </trans-unit>
+        <trans-unit id="Codeunit 1368837070 - NamedType 1979560524" size-unit="char" translate="yes" xml:space="preserve">
+          <source>Failed to parse amount value.</source>
+          <target>Failed to parse amount value.</target>
+          <note from="Developer" annotates="general" priority="2"></note>
+          <note from="Xliff Generator" annotates="general" priority="3">Codeunit PTE DC Swiss QR-Bill Decode - NamedType ParseAmountFailedLbl</note>
+        </trans-unit>
+        <trans-unit id="Codeunit 1368837070 - NamedType 1751929933" size-unit="char" translate="yes" xml:space="preserve">
+          <source>Payment reference type is not found.</source>
+          <target>Payment reference type is not found.</target>
+          <note from="Developer" annotates="general" priority="2"></note>
+          <note from="Xliff Generator" annotates="general" priority="3">Codeunit PTE DC Swiss QR-Bill Decode - NamedType PmtReferenceTypeNotFoundLbl</note>
+        </trans-unit>
+        <trans-unit id="Codeunit 1368837070 - NamedType 4094403330" size-unit="char" translate="yes" xml:space="preserve">
+          <source>QR-Reference must be 27 chars length.</source>
+          <target>QR-Reference must be 27 chars length.</target>
+          <note from="Developer" annotates="general" priority="2"></note>
+          <note from="Xliff Generator" annotates="general" priority="3">Codeunit PTE DC Swiss QR-Bill Decode - NamedType QRReferenceLengthLbl</note>
+        </trans-unit>
+        <trans-unit id="Codeunit 1368837070 - NamedType 3668892087" size-unit="char" translate="yes" xml:space="preserve">
+          <source>Trailer value EPD is not found.</source>
+          <target>Trailer value EPD is not found.</target>
+          <note from="Developer" annotates="general" priority="2"></note>
+          <note from="Xliff Generator" annotates="general" priority="3">Codeunit PTE DC Swiss QR-Bill Decode - NamedType TrailerEPDNotFoundLbl</note>
+        </trans-unit>
+        <trans-unit id="Codeunit 1368837070 - NamedType 3133775404" size-unit="char" translate="yes" xml:space="preserve">
+          <source>Payment reference type (QRR, SCOR or NON) is not found.</source>
+          <target>Payment reference type (QRR, SCOR or NON) is not found.</target>
+          <note from="Developer" annotates="general" priority="2"></note>
+          <note from="Xliff Generator" annotates="general" priority="3">Codeunit PTE DC Swiss QR-Bill Decode - NamedType UnknownPmtReferenceTypeLbl</note>
+        </trans-unit>
+        <trans-unit id="Codeunit 1368837070 - NamedType 2133021018" size-unit="char" translate="yes" xml:space="preserve">
+          <source>Unstructured message is not found.</source>
+          <target>Unstructured message is not found.</target>
+          <note from="Developer" annotates="general" priority="2"></note>
+          <note from="Xliff Generator" annotates="general" priority="3">Codeunit PTE DC Swiss QR-Bill Decode - NamedType UnstrMsgNotFoundLbl</note>
+        </trans-unit>
+        <trans-unit id="Codeunit 1368837070 - NamedType 1400434842" size-unit="char" translate="yes" xml:space="preserve">
+          <source>Only CHF and EUR currencies are permitted.</source>
+          <target>Only CHF and EUR currencies are permitted.</target>
+          <note from="Developer" annotates="general" priority="2"></note>
+          <note from="Xliff Generator" annotates="general" priority="3">Codeunit PTE DC Swiss QR-Bill Decode - NamedType WrongCurrencyLbl</note>
+        </trans-unit>
+        <trans-unit id="Codeunit 2407722738 - Method 2358783020 - NamedType 697022787" size-unit="char" translate="yes" xml:space="preserve">
+          <source>QR Bill IBAN: %1</source>
+          <target>QR Bill IBAN: %1</target>
+          <note from="Developer" annotates="general" priority="2"></note>
+          <note from="Xliff Generator" annotates="general" priority="3">Codeunit PTE DC Swiss QR-Bill Mgt. - Method IdentifyVendorFromQRCode - NamedType QRIdentificationTxt</note>
+        </trans-unit>
+        <trans-unit id="Codeunit 2407722738 - Method 3462309782 - NamedType 912690267" size-unit="char" translate="yes" xml:space="preserve">
+          <source>The value of %1 (%2) is not equal to %3 (%4). Make sure that both values match.</source>
+          <target>The value of %1 (%2) is not equal to %3 (%4). Make sure that both values match.</target>
+          <note from="Developer" annotates="general" priority="2"></note>
+          <note from="Xliff Generator" annotates="general" priority="3">Codeunit PTE DC Swiss QR-Bill Mgt. - Method ValidateAmountsInclVat - NamedType QRAmountDoNotMatchComment</note>
+        </trans-unit>
+        <trans-unit id="PageExtension 998044446 - Control 1663039630 - Property 2879900210" size-unit="char" translate="yes" xml:space="preserve" al-object-target="Page 2765460665">
+          <source>QR Bill</source>
+          <target>QR Bill</target>
+          <note from="Developer" annotates="general" priority="2"></note>
+          <note from="Xliff Generator" annotates="general" priority="3">PageExtension PTE DC Swiss QR DocCat Card - Control Extensions - Property Caption</note>
+        </trans-unit>
+        <trans-unit id="PageExtension 998044446 - Control 473458859 - Property 1295455071" size-unit="char" translate="yes" xml:space="preserve" al-object-target="Page 2765460665">
+          <source>Enable if you want to identify the vendors from the IBAN no, encoded in the Swiss QR Bill code.</source>
+          <target>Enable if you want to identify the vendors from the IBAN no, encoded in the Swiss QR Bill code.</target>
+          <note from="Developer" annotates="general" priority="2"></note>
+          <note from="Xliff Generator" annotates="general" priority="3">PageExtension PTE DC Swiss QR DocCat Card - Control Identify Vendor from QR IBAN - Property ToolTip</note>
+        </trans-unit>
+        <trans-unit id="PageExtension 998044446 - Control 3574281109 - Property 1295455071" size-unit="char" translate="yes" xml:space="preserve" al-object-target="Page 2765460665">
+          <source>Enable if you want to automatically process Swiss payment QR codes, if present on registered document.</source>
+          <target>Enable if you want to automatically process Swiss payment QR codes, if present on registered document.</target>
+          <note from="Developer" annotates="general" priority="2"></note>
+          <note from="Xliff Generator" annotates="general" priority="3">PageExtension PTE DC Swiss QR DocCat Card - Control Transfer QR Bill data - Property ToolTip</note>
+        </trans-unit>
+        <trans-unit id="PageExtension 998044446 - Control 2379586910 - Property 1295455071" size-unit="char" translate="yes" xml:space="preserve" al-object-target="Page 2765460665">
+          <source>Enable to check if the QR invoice amount is equal to the captured/calculated amount incl. VAT.</source>
+          <target>Enable to check if the QR invoice amount is equal to the captured/calculated amount incl. VAT.</target>
+          <note from="Developer" annotates="general" priority="2"></note>
+          <note from="Xliff Generator" annotates="general" priority="3">PageExtension PTE DC Swiss QR DocCat Card - Control Validate QR Bill amount - Property ToolTip</note>
+        </trans-unit>
+        <trans-unit id="TableExtension 3880489243 - Field 473458859 - Property 2879900210" size-unit="char" translate="yes" xml:space="preserve" al-object-target="Table 3225021973">
+          <source>Identify Vendor from QR IBAN</source>
+          <target>Identify Vendor from QR IBAN</target>
+          <note from="Developer" annotates="general" priority="2"></note>
+          <note from="Xliff Generator" annotates="general" priority="3">TableExtension PTE DC Swiss QR Doc. Cat. Ext. - Field Identify Vendor from QR IBAN - Property Caption</note>
+        </trans-unit>
+        <trans-unit id="TableExtension 3880489243 - Field 3574281109 - Property 2879900210" size-unit="char" translate="yes" xml:space="preserve" al-object-target="Table 3225021973">
+          <source>Transfer QR Bill data</source>
+          <target>Transfer QR Bill data</target>
+          <note from="Developer" annotates="general" priority="2"></note>
+          <note from="Xliff Generator" annotates="general" priority="3">TableExtension PTE DC Swiss QR Doc. Cat. Ext. - Field Transfer QR Bill data - Property Caption</note>
+        </trans-unit>
+        <trans-unit id="TableExtension 3880489243 - Field 2379586910 - Property 2879900210" size-unit="char" translate="yes" xml:space="preserve" al-object-target="Table 3225021973">
+          <source>Validate QR Bill amount</source>
+          <target>Validate QR Bill amount</target>
+          <note from="Developer" annotates="general" priority="2"></note>
+          <note from="Xliff Generator" annotates="general" priority="3">TableExtension PTE DC Swiss QR Doc. Cat. Ext. - Field Validate QR Bill amount - Property Caption</note>
+        </trans-unit>
+      </group>
+    </body>
+  </file>
+</xliff>

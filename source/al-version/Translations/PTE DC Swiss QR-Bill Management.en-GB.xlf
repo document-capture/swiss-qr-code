@@ -55,7 +55,6 @@
           <source>The file is empty.</source>
           <target>The file is empty.</target>
           <note from="Developer" annotates="general" priority="2"></note>
-          <note from="NAB AL Tool Refresh Xlf" annotates="general" priority="3"></note>
           <note from="Xliff Generator" annotates="general" priority="3">Codeunit PTE DC Swiss QR-Bill Decode - NamedType EmptyFileLbl</note>
         </trans-unit>
         <trans-unit id="Codeunit 1368837070 - NamedType 2262322168" size-unit="char" translate="yes" xml:space="preserve">
@@ -142,6 +141,18 @@
           <note from="Developer" annotates="general" priority="2"></note>
           <note from="Xliff Generator" annotates="general" priority="3">Codeunit PTE DC Swiss QR-Bill Decode - NamedType WrongCurrencyLbl</note>
         </trans-unit>
+        <trans-unit id="Codeunit 2407722738 - NamedType 553602465" size-unit="char" translate="yes" xml:space="preserve">
+          <source>QR-Bill import was cancelled.</source>
+          <target>QR-Bill import was cancelled.</target>
+          <note from="Developer" annotates="general" priority="2"></note>
+          <note from="Xliff Generator" annotates="general" priority="3">Codeunit PTE DC Swiss QR-Bill Mgt. - NamedType ImportCancelledMsg</note>
+        </trans-unit>
+        <trans-unit id="Codeunit 2407722738 - NamedType 4222375049" size-unit="char" translate="yes" xml:space="preserve">
+          <source>A vendor bank account with IBAN or QR-IBAN\%1\was not found.\\Do you want to create a new vendor bank account?</source>
+          <target>A vendor bank account with IBAN or QR-IBAN\%1\was not found.\\Do you want to create a new vendor bank account?</target>
+          <note from="Developer" annotates="general" priority="2">%1 - IBAN value</note>
+          <note from="Xliff Generator" annotates="general" priority="3">Codeunit PTE DC Swiss QR-Bill Mgt. - NamedType PurhDocVendBankAccountQst</note>
+        </trans-unit>
         <trans-unit id="Codeunit 2407722738 - Method 2358783020 - NamedType 697022787" size-unit="char" translate="yes" xml:space="preserve">
           <source>QR Bill IBAN: %1</source>
           <target>QR Bill IBAN: %1</target>
@@ -153,48 +164,6 @@
           <target>The value of %1 (%2) is not equal to %3 (%4). Make sure that both values match.</target>
           <note from="Developer" annotates="general" priority="2"></note>
           <note from="Xliff Generator" annotates="general" priority="3">Codeunit PTE DC Swiss QR-Bill Mgt. - Method ValidateAmountsInclVat - NamedType QRAmountDoNotMatchComment</note>
-        </trans-unit>
-        <trans-unit id="PageExtension 998044446 - Control 1663039630 - Property 2879900210" size-unit="char" translate="yes" xml:space="preserve" al-object-target="Page 2765460665">
-          <source>QR Bill</source>
-          <target>QR Bill</target>
-          <note from="Developer" annotates="general" priority="2"></note>
-          <note from="Xliff Generator" annotates="general" priority="3">PageExtension PTE DC Swiss QR DocCat Card - Control Extensions - Property Caption</note>
-        </trans-unit>
-        <trans-unit id="PageExtension 998044446 - Control 473458859 - Property 1295455071" size-unit="char" translate="yes" xml:space="preserve" al-object-target="Page 2765460665">
-          <source>Enable if you want to identify the vendors from the IBAN no, encoded in the Swiss QR Bill code.</source>
-          <target>Enable if you want to identify the vendors from the IBAN no, encoded in the Swiss QR Bill code.</target>
-          <note from="Developer" annotates="general" priority="2"></note>
-          <note from="Xliff Generator" annotates="general" priority="3">PageExtension PTE DC Swiss QR DocCat Card - Control Identify Vendor from QR IBAN - Property ToolTip</note>
-        </trans-unit>
-        <trans-unit id="PageExtension 998044446 - Control 3574281109 - Property 1295455071" size-unit="char" translate="yes" xml:space="preserve" al-object-target="Page 2765460665">
-          <source>Enable if you want to automatically process Swiss payment QR codes, if present on registered document.</source>
-          <target>Enable if you want to automatically process Swiss payment QR codes, if present on registered document.</target>
-          <note from="Developer" annotates="general" priority="2"></note>
-          <note from="Xliff Generator" annotates="general" priority="3">PageExtension PTE DC Swiss QR DocCat Card - Control Transfer QR Bill data - Property ToolTip</note>
-        </trans-unit>
-        <trans-unit id="PageExtension 998044446 - Control 2379586910 - Property 1295455071" size-unit="char" translate="yes" xml:space="preserve" al-object-target="Page 2765460665">
-          <source>Enable to check if the QR invoice amount is equal to the captured/calculated amount incl. VAT.</source>
-          <target>Enable to check if the QR invoice amount is equal to the captured/calculated amount incl. VAT.</target>
-          <note from="Developer" annotates="general" priority="2"></note>
-          <note from="Xliff Generator" annotates="general" priority="3">PageExtension PTE DC Swiss QR DocCat Card - Control Validate QR Bill amount - Property ToolTip</note>
-        </trans-unit>
-        <trans-unit id="TableExtension 3880489243 - Field 473458859 - Property 2879900210" size-unit="char" translate="yes" xml:space="preserve" al-object-target="Table 3225021973">
-          <source>Identify Vendor from QR IBAN</source>
-          <target>Identify Vendor from QR IBAN</target>
-          <note from="Developer" annotates="general" priority="2"></note>
-          <note from="Xliff Generator" annotates="general" priority="3">TableExtension PTE DC Swiss QR Doc. Cat. Ext. - Field Identify Vendor from QR IBAN - Property Caption</note>
-        </trans-unit>
-        <trans-unit id="TableExtension 3880489243 - Field 3574281109 - Property 2879900210" size-unit="char" translate="yes" xml:space="preserve" al-object-target="Table 3225021973">
-          <source>Transfer QR Bill data</source>
-          <target>Transfer QR Bill data</target>
-          <note from="Developer" annotates="general" priority="2"></note>
-          <note from="Xliff Generator" annotates="general" priority="3">TableExtension PTE DC Swiss QR Doc. Cat. Ext. - Field Transfer QR Bill data - Property Caption</note>
-        </trans-unit>
-        <trans-unit id="TableExtension 3880489243 - Field 2379586910 - Property 2879900210" size-unit="char" translate="yes" xml:space="preserve" al-object-target="Table 3225021973">
-          <source>Validate QR Bill amount</source>
-          <target>Validate QR Bill amount</target>
-          <note from="Developer" annotates="general" priority="2"></note>
-          <note from="Xliff Generator" annotates="general" priority="3">TableExtension PTE DC Swiss QR Doc. Cat. Ext. - Field Validate QR Bill amount - Property Caption</note>
         </trans-unit>
       </group>
     </body>

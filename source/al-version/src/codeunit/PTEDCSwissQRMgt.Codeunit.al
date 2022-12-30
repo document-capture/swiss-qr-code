@@ -298,6 +298,7 @@ Codeunit 61110 "PTE DC SwissQR Mgt."
         Vendor: Record Vendor;
         SwissQRBillCreateVendBank: page "Swiss QR-Bill Create Vend Bank";
         BankCode: Label 'QR-IBAN', Locked = true;
+        VendBankAccountFound: Boolean;
     begin
         if not IsPurchaseInvoiceCategory(Document) then
             exit;
@@ -316,24 +317,31 @@ Codeunit 61110 "PTE DC SwissQR Mgt."
         // Check if there is an existing vendor bank account for the QR IBAN 
         VendorBankAccount.SetRange("Vendor No.", Document."Source Record No.");
         VendorBankAccount.SetRange("Payment Form", VendorBankAccount."Payment Form"::"Bank Payment Domestic");
-        VendorBankAccount.SetRange(IBAN, TempSwissQRBillBuffer.IBAN);
-        if VendorBankAccount.IsEmpty() then
-            // No vendor bank account found - ask user to create one
-            if Confirm(StrSubstNo(PurchDocVendBankAccountQst, TempSwissQRBillBuffer.IBAN)) then begin
-                Clear(VendorBankAccount);
-                VendorBankAccount."Vendor No." := Document."Source Record No.";
-                VendorBankAccount.IBAN := TempSwissQRBillBuffer.IBAN;
-                VendorBankAccount."Payment Form" := VendorBankAccount."Payment Form"::"Bank Payment Domestic";
+        if VendorBankAccount.FindSet() then
+            repeat
+                // check if QR IBAN is equal to Vend. bank account without spaces
+                VendBankAccountFound := (DelChr(VendorBankAccount.IBAN) = TempSwissQRBillBuffer.IBAN);
+            until (VendorBankAccount.Next() = 0) or VendBankAccountFound;
 
-                if VendorBankAccount2.GET(Document."Source Record No.", BankCode) then
-                    VendorBankAccount.Code := IncStr(BankCode)
-                else
-                    VendorBankAccount.Code := BankCode;
+        if VendBankAccountFound then
+            exit;
 
-                VendorBankAccount.Insert(true);
+        // No vendor bank account found - ask user to create one
+        if Confirm(StrSubstNo(PurchDocVendBankAccountQst, TempSwissQRBillBuffer.IBAN)) then begin
+            Clear(VendorBankAccount);
+            VendorBankAccount."Vendor No." := Document."Source Record No.";
+            VendorBankAccount.IBAN := TempSwissQRBillBuffer.IBAN;
+            VendorBankAccount."Payment Form" := VendorBankAccount."Payment Form"::"Bank Payment Domestic";
 
-            end else
-                Error(ImportCancelledMsg);
+            if VendorBankAccount2.GET(Document."Source Record No.", BankCode) then
+                VendorBankAccount.Code := IncStr(BankCode)
+            else
+                VendorBankAccount.Code := BankCode;
+
+            VendorBankAccount.Insert(true);
+
+        end else
+            Error(ImportCancelledMsg);
     end;
 
     // Procedure to check if the OPplus field for Payment Bank Code is existing

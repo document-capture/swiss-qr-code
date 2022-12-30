@@ -166,7 +166,7 @@ Codeunit 61110 "PTE DC SwissQR Mgt."
 
         TempSwissQRBillBuffer.Get(ValidQRBillCodeFound);
 
-        Word := Format(Round(TempSwissQRBillBuffer.Amount, 0.01, '='));
+        Word := Format(TempSwissQRBillBuffer.Amount, 0, 2);
 
         CaptureMgt.UpdateFieldValue(Document."No.", 1, 0, Field, Word, false, false);
 

@@ -22,6 +22,7 @@ Codeunit 61110 "PTE DC SwissQR Mgt."
         PurchaseHeader: Record "Purchase Header";
         DocCat: Record "CDC Document Category";
         Handled: Boolean;
+        VendBankAccountCode: Code[20];
     begin
         if not IsPurchaseInvoiceCategory(Document) then
             exit;
@@ -55,7 +56,7 @@ Codeunit 61110 "PTE DC SwissQR Mgt."
         if not PurchaseHeader.GET(Document."Created Doc. Subtype", Document."Created Doc. No.") then
             exit;
 
-        PurchaseHeader.VALIDATE("Bank Code", GetVendorBankCode(Document, PurchaseHeader, TempSwissQRBillBuffer));
+        VendBankAccountCode := CreateVendorBankAccountIfNotExist(Document);
         PurchaseHeader.VALIDATE("Swiss QR-Bill", TRUE);
         PurchaseHeader.VALIDATE("Swiss QR-Bill Amount", TempSwissQRBillBuffer.Amount);
         PurchaseHeader.VALIDATE("Swiss QR-Bill IBAN", TempSwissQRBillBuffer.IBAN);
@@ -63,48 +64,50 @@ Codeunit 61110 "PTE DC SwissQR Mgt."
         PurchaseHeader.VALIDATE("Swiss QR-Bill Currency", TempSwissQRBillBuffer.Currency);
         PurchaseHeader.VALIDATE("Swiss QR-Bill Unstr. Message", TempSwissQRBillBuffer."Unstructured Message");
         PurchaseHeader.VALIDATE("Payment Reference", TempSwissQRBillBuffer."Payment Reference");
-        SetOPPPaymentBankCode(PurchaseHeader);
         PurchaseHeader.MODIFY(TRUE);
+
+        SetOPPPaymentBankCode(PurchaseHeader, VendBankAccountCode);
+
     end;
 
-    local procedure GetVendorBankCode(Document: Record 6085590; PurchaseHeader: Record "Purchase Header"; var SwissQRBillBuffer: Record "Swiss QR-Bill Buffer"): Code[20];
-    var
-        VendorBankAccount: Record 288;
-        BankDirectory: Record 11500;
-        VendBankCode: Code[20];
-        VendBankCodeCounter: Integer;
-        Clearing: Text;
-    begin
-        VendorBankAccount.reset();
-        VendorBankAccount.setrange("Vendor No.", PurchaseHeader."Buy-from Vendor No.");
-        VendorBankAccount.setrange("Payment Form", VendorBankAccount."Payment Form"::"Bank Payment Domestic");
-        VendorBankAccount.setrange(IBAN, SwissQRBillBuffer.IBAN);
-        if VendorBankAccount.IsEmpty() then begin
-            //If No -> Create vendor bank account: - Fill in QR-IBAN + search SWifT code of QR-IBAN from field 5 (5 digits) in Bank Directory Clearing
-            repeat
-                VendBankCodeCounter += 1;
-                VendBankCode := STRSUBSTNO('QR-%1', VendBankCodeCounter);
-            until (NOT VendorBankAccount.GET(PurchaseHeader."Buy-from Vendor No.", VendBankCode) OR (VendBankCodeCounter >= 100));
-            if VendBankCodeCounter >= 100 then
-                VendBankCode := 'QR-XXX';
+    // local procedure GetVendorBankCode(Document: Record 6085590; PurchaseHeader: Record "Purchase Header"; var SwissQRBillBuffer: Record "Swiss QR-Bill Buffer"): Code[20];
+    // var
+    //     VendorBankAccount: Record 288;
+    //     BankDirectory: Record 11500;
+    //     VendBankCode: Code[20];
+    //     VendBankCodeCounter: Integer;
+    //     Clearing: Text;
+    // begin
+    //     VendorBankAccount.reset();
+    //     VendorBankAccount.setrange("Vendor No.", PurchaseHeader."Buy-from Vendor No.");
+    //     VendorBankAccount.setrange("Payment Form", VendorBankAccount."Payment Form"::"Bank Payment Domestic");
+    //     VendorBankAccount.setrange(IBAN, SwissQRBillBuffer.IBAN);
+    //     if VendorBankAccount.IsEmpty() then begin
+    //         //If No -> Create vendor bank account: - Fill in QR-IBAN + search SWifT code of QR-IBAN from field 5 (5 digits) in Bank Directory Clearing
+    //         repeat
+    //             VendBankCodeCounter += 1;
+    //             VendBankCode := STRSUBSTNO('QR-%1', VendBankCodeCounter);
+    //         until (NOT VendorBankAccount.GET(PurchaseHeader."Buy-from Vendor No.", VendBankCode) OR (VendBankCodeCounter >= 100));
+    //         if VendBankCodeCounter >= 100 then
+    //             VendBankCode := 'QR-XXX';
 
-            VendorBankAccount.RESET();
-            VendorBankAccount.INIT();
-            VendorBankAccount.VALIDATE("Vendor No.", PurchaseHeader."Buy-from Vendor No.");
-            VendorBankAccount.VALIDATE(Code, VendBankCode);
-            VendorBankAccount.INSERT(TRUE);
-            VendorBankAccount.VALIDATE("Payment Form", VendorBankAccount."Payment Form"::"Bank Payment Domestic");
-            VendorBankAccount.VALIDATE(IBAN, SwissQRBillBuffer.IBAN);
-            //SWifT
-            Clearing := COPYSTR(SwissQRBillBuffer.IBAN, 5, 5);
-            if BankDirectory.GET(Clearing) then begin
-                VendorBankAccount.VALIDATE("SWifT Code", BankDirectory."SWifT Address");
-            end;
-            VendorBankAccount.MODifY(TRUE);
-        end;
+    //         VendorBankAccount.RESET();
+    //         VendorBankAccount.INIT();
+    //         VendorBankAccount.VALIDATE("Vendor No.", PurchaseHeader."Buy-from Vendor No.");
+    //         VendorBankAccount.VALIDATE(Code, VendBankCode);
+    //         VendorBankAccount.INSERT(TRUE);
+    //         VendorBankAccount.VALIDATE("Payment Form", VendorBankAccount."Payment Form"::"Bank Payment Domestic");
+    //         VendorBankAccount.VALIDATE(IBAN, SwissQRBillBuffer.IBAN);
+    //         //SWifT
+    //         Clearing := COPYSTR(SwissQRBillBuffer.IBAN, 5, 5);
+    //         if BankDirectory.GET(Clearing) then begin
+    //             VendorBankAccount.VALIDATE("SWifT Code", BankDirectory."SWifT Address");
+    //         end;
+    //         VendorBankAccount.MODifY(TRUE);
+    //     end;
 
-        exit(VendorBankAccount.Code);
-    END;
+    //     exit(VendorBankAccount.Code);
+    // END;
 
     local procedure IdentifyVendorFromQRCode(var Document: Record "CDC Document"): Boolean
     var
@@ -291,7 +294,7 @@ Codeunit 61110 "PTE DC SwissQR Mgt."
         exit(true);
     end;
 
-    local procedure CreateVendorBankAccountIfNotExist(var Document: Record "CDC Document")
+    local procedure CreateVendorBankAccountIfNotExist(var Document: Record "CDC Document"): Code[20]
     var
         VendorBankAccount: Record "Vendor Bank Account";
         VendorBankAccount2: Record "Vendor Bank Account";
@@ -324,7 +327,7 @@ Codeunit 61110 "PTE DC SwissQR Mgt."
             until (VendorBankAccount.Next() = 0) or VendBankAccountFound;
 
         if VendBankAccountFound then
-            exit;
+            exit(VendorBankAccount.Code);
 
         // No vendor bank account found - ask user to create one
         if Confirm(StrSubstNo(PurchDocVendBankAccountQst, TempSwissQRBillBuffer.IBAN)) then begin
@@ -338,7 +341,8 @@ Codeunit 61110 "PTE DC SwissQR Mgt."
             else
                 VendorBankAccount.Code := BankCode;
 
-            VendorBankAccount.Insert(true);
+            if VendorBankAccount.Insert(true) then
+                exit(VendorBankAccount.Code);
 
         end else
             Error(ImportCancelledMsg);
@@ -346,7 +350,7 @@ Codeunit 61110 "PTE DC SwissQR Mgt."
 
     // Procedure to check if the OPplus field for Payment Bank Code is existing
     // If the field exists we write the QR IBAN Vendor Bank account code into this field
-    local procedure SetOPPPaymentBankCode(var PurchaseHeader: Record "Purchase Header")
+    local procedure SetOPPPaymentBankCode(PurchaseHeader: Record "Purchase Header"; VendBankAccountCode: Code[20])
     var
         RecRef: RecordRef;
         PaymBankCode: FieldRef;
@@ -354,7 +358,7 @@ Codeunit 61110 "PTE DC SwissQR Mgt."
         if RecRef.Get(PurchaseHeader.RecordId) then
             if RecRef.FieldExist(5157894) then begin
                 PaymBankCode := RecRef.Field(5157894);
-                PaymBankCode.Validate(PurchaseHeader."Bank Code");  // use the Bank Code value we have set before
+                PaymBankCode.Validate(VendBankAccountCode);  // use the Bank Code value we have set before
                 RecRef.Modify()
             end;
     end;

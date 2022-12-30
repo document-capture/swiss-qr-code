@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <PermissionSets>
-  <PermissionSet RoleID="PTE DC SWISS QR-BILL MANAGEMENT" RoleName="PTE DC Swiss QR-Bill Management">
+  <PermissionSet RoleID="PTE DC SWISSQR" RoleName="PTE DC SwissQR Management">
     <Permission>
       <ObjectID>61111</ObjectID>
       <ObjectType>5</ObjectType>

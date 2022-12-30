@@ -1,8 +1,8 @@
-codeunit 61112 "PTE DC SwissQR Install Mgt"
+codeunit 61113 "PTE DC SwissQR Update Mgt"
 {
-    Subtype = Install;
+    Subtype = Upgrade;
 
-    trigger OnInstallAppPerCompany()
+    trigger OnUpgradePerCompany()
     var
         SwissQRMgt: Codeunit "PTE DC SwissQR Mgt.";
     begin

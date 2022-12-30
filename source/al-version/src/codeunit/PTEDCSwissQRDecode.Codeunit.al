@@ -1,4 +1,4 @@
-codeunit 61111 "PTE DC Swiss QR-Bill Decode"
+codeunit 61111 "PTE DC SwissQR Decode"
 {
     var
         TempNameValueBuffer: Record "Name/Value Buffer" temporary;

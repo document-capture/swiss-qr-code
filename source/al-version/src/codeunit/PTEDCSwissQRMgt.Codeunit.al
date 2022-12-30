@@ -1,4 +1,4 @@
-Codeunit 61110 "PTE DC Swiss QR-Bill Mgt."
+Codeunit 61110 "PTE DC SwissQR Mgt."
 {
     TableNo = "CDC Document";
 
@@ -6,8 +6,8 @@ Codeunit 61110 "PTE DC Swiss QR-Bill Mgt."
         CaptureMgt: Codeunit "CDC Capture Management";
         TempSwissQRBillBuffer: Record "Swiss QR-Bill Buffer" temporary;
         ValidQRBillCodeFound: Integer;
-        PurhDocVendBankAccountQst: Label 'A vendor bank account with IBAN or QR-IBAN\%1\was not found.\\Do you want to create a new vendor bank account?', Comment = '%1 - IBAN value';
-        ImportCancelledMsg: Label 'QR-Bill import was cancelled.';
+        PurchDocVendBankAccountQst: Label 'A vendor bank account with IBAN or QR-IBAN\%1\was not found.\\Do you want to create a new vendor bank account?', Comment = '%1 - IBAN value';
+        ImportCancelledMsg: Label 'Registration was canceled! Please setup the QR-IBAN bank account for this vendor first.';
 
 
     trigger OnRun()
@@ -63,6 +63,7 @@ Codeunit 61110 "PTE DC Swiss QR-Bill Mgt."
         PurchaseHeader.VALIDATE("Swiss QR-Bill Currency", TempSwissQRBillBuffer.Currency);
         PurchaseHeader.VALIDATE("Swiss QR-Bill Unstr. Message", TempSwissQRBillBuffer."Unstructured Message");
         PurchaseHeader.VALIDATE("Payment Reference", TempSwissQRBillBuffer."Payment Reference");
+        SetOPPPaymentBankCode(PurchaseHeader);
         PurchaseHeader.MODIFY(TRUE);
     end;
 
@@ -209,7 +210,7 @@ Codeunit 61110 "PTE DC Swiss QR-Bill Mgt."
     local procedure FindQRPaymentCodeInDocument(var Document: Record "CDC Document"; var TempSwissQRBillBuffer: Record "Swiss QR-Bill Buffer") ValidQRBillCodeFound: integer
     var
         CDCDocumentWord: Record 6085592;
-        SwissQRBillDecode: Codeunit "PTE DC Swiss QR-Bill Decode";
+        SwissQRBillDecode: Codeunit "PTE DC SwissQR Decode";
         QRBillInStream: InStream;
         CrLf: Text;
         CurrentQRCodeLine: Text;
@@ -316,9 +317,10 @@ Codeunit 61110 "PTE DC Swiss QR-Bill Mgt."
         VendorBankAccount.SetRange("Vendor No.", Document."Source Record No.");
         VendorBankAccount.SetRange("Payment Form", VendorBankAccount."Payment Form"::"Bank Payment Domestic");
         VendorBankAccount.SetRange(IBAN, TempSwissQRBillBuffer.IBAN);
-        if VendorBankAccount.IsEmpty() then begin
+        if VendorBankAccount.IsEmpty() then
             // No vendor bank account found - ask user to create one
-            if Confirm(StrSubstNo(PurhDocVendBankAccountQst, TempSwissQRBillBuffer.IBAN)) then begin
+            if Confirm(StrSubstNo(PurchDocVendBankAccountQst, TempSwissQRBillBuffer.IBAN)) then begin
+                Clear(VendorBankAccount);
                 VendorBankAccount."Vendor No." := Document."Source Record No.";
                 VendorBankAccount.IBAN := TempSwissQRBillBuffer.IBAN;
                 VendorBankAccount."Payment Form" := VendorBankAccount."Payment Form"::"Bank Payment Domestic";
@@ -328,18 +330,64 @@ Codeunit 61110 "PTE DC Swiss QR-Bill Mgt."
                 else
                     VendorBankAccount.Code := BankCode;
 
-                SwissQRBillCreateVendBank.LookupMode(true);
-                SwissQRBillCreateVendBank.FromDCSetDetails(VendorBankAccount);
-                if SwissQRBillCreateVendBank.RunModal() = Action::LookupOK then begin
-                    SwissQRBillCreateVendBank.FromDCGetDetails(VendorBankAccount);
-                    VendorBankAccount.Insert(true);
-                end else
-                    Error(ImportCancelledMsg);
+                VendorBankAccount.Insert(true);
+
             end else
                 Error(ImportCancelledMsg);
-        end;
     end;
 
+    // Procedure to check if the OPplus field for Payment Bank Code is existing
+    // If the field exists we write the QR IBAN Vendor Bank account code into this field
+    local procedure SetOPPPaymentBankCode(var PurchaseHeader: Record "Purchase Header")
+    var
+        RecRef: RecordRef;
+        PaymBankCode: FieldRef;
+    begin
+        if RecRef.Get(PurchaseHeader.RecordId) then
+            if RecRef.FieldExist(5157894) then begin
+                PaymBankCode := RecRef.Field(5157894);
+                PaymBankCode.Validate(PurchaseHeader."Bank Code");  // use the Bank Code value we have set before
+                RecRef.Modify()
+            end;
+    end;
+
+    internal procedure InsertQRAmtFieldToMasterTemplates()
+    var
+        DocCat: Record "CDC Document Category";
+        Template: Record "CDC Template";
+        AmtInclTemplateField: Record "CDC Template Field";
+        QRAmtInclTemplateField: Record "CDC Template Field";
+        QRAmtInclFieldName: Label 'QR Amount incl. VAT';
+    begin
+        DocCat.SetRange("Source Table No.", 23);
+        DocCat.SetRange("Destination Header Table No.", 38);
+        DocCat.SetRange("Destination Line Table No.", 39);
+        if DocCat.IsEmpty then
+            exit;
+
+        if DocCat.FindSet() then
+            repeat
+                Template.SetRange("Category Code", DocCat.Code);
+                Template.SetRange("Data Type", Template."Data Type"::PDF);
+                Template.SetRange(Type, Template.Type::Master);
+                if Template.FindSet() then
+                    repeat
+                        if AmtInclTemplateField.Get(Template."No.", AmtInclTemplateField.Type::Header, 'AMOUNTINCLVAT') then
+                            if not QRAmtInclTemplateField.Get(Template."No.", QRAmtInclTemplateField.Type::Header, 'QRAMOUNTINCLVAT') then begin
+                                Clear(QRAmtInclTemplateField);
+                                QRAmtInclTemplateField.Validate("Template No.", Template."No.");
+                                QRAmtInclTemplateField.Validate(Type, QRAmtInclTemplateField.Type::Header);
+                                QRAmtInclTemplateField.Validate(Code, 'QRAMOUNTINCLVAT');
+                                QRAmtInclTemplateField.Validate("Field Name", QRAmtInclFieldName);
+                                QRAmtInclTemplateField.Validate("Data Type", QRAmtInclTemplateField."Data Type"::Number);
+                                QRAmtInclTemplateField.Validate("Search for Value", true);
+                                QRAmtInclTemplateField.Validate("Sort Order", AmtInclTemplateField."Sort Order" + 1);
+                                QRAmtInclTemplateField.Validate("Insert on new Templates", true);
+                                QRAmtInclTemplateField.Insert(true);
+                            end;
+                    until Template.Next() = 0;
+            until DocCat.Next() = 0;
+    end;
 
     [EventSubscriber(ObjectType::Codeunit, Codeunit::"CDC Purch. - Register", 'OnBeforeRegisterDocument', '', true, true)]
     local procedure PurchaseRegisterOnBeforeRegisterDocument(var Document: Record "CDC Document")

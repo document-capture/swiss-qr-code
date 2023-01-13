@@ -219,6 +219,8 @@ Codeunit 61110 "PTE DC SwissQR Mgt."
         CurrentQRCodeLine: Text;
         QRBillContent: Text;
     begin
+        TempSwissQRBillBuffer.DeleteAll();
+
         CDCDocumentWord.SETRANGE("Document No.", Document."No.");
         CDCDocumentWord.SETRANGE("Barcode Type", 'QRCODE');
         IF CDCDocumentWord.ISEMPTY THEN

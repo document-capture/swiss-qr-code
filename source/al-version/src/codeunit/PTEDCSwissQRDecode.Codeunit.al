@@ -44,14 +44,14 @@ codeunit 61111 "PTE DC SwissQR Decode"
         currEntryNo: Integer;
     begin
         currEntryNo := SwissQRBillBuffer."Entry No.";
-        currEntryNo += 1;
+
         Clear(SwissQRBillBuffer);
         TempNameValueBuffer.DeleteAll();
 
         if not InitializeLineBuffer(QRCodeText) then
             exit(false);
 
-        SwissQRBillBuffer."Entry No." := currEntryNo;
+
 
 
         if not ReadHeader() then
@@ -80,6 +80,8 @@ codeunit 61111 "PTE DC SwissQR Decode"
         ReadNextLineIntoFieldNo(SwissQRBillBuffer, SwissQRBillBuffer.FieldNo("Alt. Procedure Value 2"), '');
         ParseAltProcedures(SwissQRBillBuffer);
 
+        currEntryNo += 1;
+        SwissQRBillBuffer."Entry No." := currEntryNo;
         SwissQRBillBuffer.Insert();
 
         exit(not AnyErrorLogged());

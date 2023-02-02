@@ -56,7 +56,7 @@ Codeunit 61110 "PTE DC SwissQR Mgt."
         if not PurchaseHeader.GET(Document."Created Doc. Subtype", Document."Created Doc. No.") then
             exit;
 
-        VendBankAccountCode := CreateVendorBankAccountIfNotExist(Document);
+        VendBankAccountCode := GetVendorBankAccount(Document, TempSwissQRBillBuffer);
         PurchaseHeader.VALIDATE("Swiss QR-Bill", TRUE);
         PurchaseHeader.VALIDATE("Swiss QR-Bill Amount", TempSwissQRBillBuffer.Amount);
         PurchaseHeader.VALIDATE("Swiss QR-Bill IBAN", TempSwissQRBillBuffer.IBAN);
@@ -69,45 +69,6 @@ Codeunit 61110 "PTE DC SwissQR Mgt."
         SetOPPPaymentBankCode(PurchaseHeader, VendBankAccountCode);
 
     end;
-
-    // local procedure GetVendorBankCode(Document: Record 6085590; PurchaseHeader: Record "Purchase Header"; var SwissQRBillBuffer: Record "Swiss QR-Bill Buffer"): Code[20];
-    // var
-    //     VendorBankAccount: Record 288;
-    //     BankDirectory: Record 11500;
-    //     VendBankCode: Code[20];
-    //     VendBankCodeCounter: Integer;
-    //     Clearing: Text;
-    // begin
-    //     VendorBankAccount.reset();
-    //     VendorBankAccount.setrange("Vendor No.", PurchaseHeader."Buy-from Vendor No.");
-    //     VendorBankAccount.setrange("Payment Form", VendorBankAccount."Payment Form"::"Bank Payment Domestic");
-    //     VendorBankAccount.setrange(IBAN, SwissQRBillBuffer.IBAN);
-    //     if VendorBankAccount.IsEmpty() then begin
-    //         //If No -> Create vendor bank account: - Fill in QR-IBAN + search SWifT code of QR-IBAN from field 5 (5 digits) in Bank Directory Clearing
-    //         repeat
-    //             VendBankCodeCounter += 1;
-    //             VendBankCode := STRSUBSTNO('QR-%1', VendBankCodeCounter);
-    //         until (NOT VendorBankAccount.GET(PurchaseHeader."Buy-from Vendor No.", VendBankCode) OR (VendBankCodeCounter >= 100));
-    //         if VendBankCodeCounter >= 100 then
-    //             VendBankCode := 'QR-XXX';
-
-    //         VendorBankAccount.RESET();
-    //         VendorBankAccount.INIT();
-    //         VendorBankAccount.VALIDATE("Vendor No.", PurchaseHeader."Buy-from Vendor No.");
-    //         VendorBankAccount.VALIDATE(Code, VendBankCode);
-    //         VendorBankAccount.INSERT(TRUE);
-    //         VendorBankAccount.VALIDATE("Payment Form", VendorBankAccount."Payment Form"::"Bank Payment Domestic");
-    //         VendorBankAccount.VALIDATE(IBAN, SwissQRBillBuffer.IBAN);
-    //         //SWifT
-    //         Clearing := COPYSTR(SwissQRBillBuffer.IBAN, 5, 5);
-    //         if BankDirectory.GET(Clearing) then begin
-    //             VendorBankAccount.VALIDATE("SWifT Code", BankDirectory."SWifT Address");
-    //         end;
-    //         VendorBankAccount.MODifY(TRUE);
-    //     end;
-
-    //     exit(VendorBankAccount.Code);
-    // END;
 
     local procedure IdentifyVendorFromQRCode(var Document: Record "CDC Document"): Boolean
     var
@@ -296,7 +257,7 @@ Codeunit 61110 "PTE DC SwissQR Mgt."
         exit(true);
     end;
 
-    local procedure CreateVendorBankAccountIfNotExist(var Document: Record "CDC Document"): Code[20]
+    local procedure GetVendorBankAccount(var Document: Record "CDC Document"; var TempSwissQRBillBuffer: Record "Swiss QR-Bill Buffer"): Code[20]
     var
         VendorBankAccount: Record "Vendor Bank Account";
         VendorBankAccount2: Record "Vendor Bank Account";
@@ -308,9 +269,11 @@ Codeunit 61110 "PTE DC SwissQR Mgt."
         if not IsPurchaseInvoiceCategory(Document) then
             exit;
 
-        ValidQRBillCodeFound := FindQRPaymentCodeInDocument(Document, TempSwissQRBillBuffer);
-
+        ValidQRBillCodeFound := TempSwissQRBillBuffer.Count;
         if ValidQRBillCodeFound = 0 then
+            ValidQRBillCodeFound := FindQRPaymentCodeInDocument(Document, TempSwissQRBillBuffer);
+
+        if TempSwissQRBillBuffer.Count = 0 then
             exit;
 
         if not TempSwissQRBillBuffer.Get(ValidQRBillCodeFound) then
@@ -406,7 +369,7 @@ Codeunit 61110 "PTE DC SwissQR Mgt."
     [EventSubscriber(ObjectType::Codeunit, Codeunit::"CDC Purch. - Register", 'OnBeforeRegisterDocument', '', true, true)]
     local procedure PurchaseRegisterOnBeforeRegisterDocument(var Document: Record "CDC Document")
     begin
-        CreateVendorBankAccountIfNotExist(Document);
+        GetVendorBankAccount(Document, TempSwissQRBillBuffer);
     end;
 
     [EventSubscriber(ObjectType::Codeunit, Codeunit::"CDC Purch. - Register", 'OnAfterRegister', '', true, true)]

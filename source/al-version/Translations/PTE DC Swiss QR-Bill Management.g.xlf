@@ -138,6 +138,16 @@
           <note from="Developer" annotates="general" priority="2"></note>
           <note from="Xliff Generator" annotates="general" priority="3">Codeunit PTE DC SwissQR Mgt. - Method ValidateAmountsInclVat - NamedType QRAmountDoNotMatchComment</note>
         </trans-unit>
+        <trans-unit id="PageExtension 2110425848 - Action 3857354736 - Property 1295455071" size-unit="char" translate="yes" xml:space="preserve" al-object-target="Page 4105952328">
+          <source>View or set up the vendor's bank accounts. You can set up any number of bank accounts for each vendor.</source>
+          <note from="Developer" annotates="general" priority="2"></note>
+          <note from="Xliff Generator" annotates="general" priority="3">PageExtension PTE DC Swiss QR Doc. List - Action Bank Accounts - Property ToolTip</note>
+        </trans-unit>
+        <trans-unit id="PageExtension 2110425848 - Action 3857354736 - Property 2879900210" size-unit="char" translate="yes" xml:space="preserve" al-object-target="Page 4105952328">
+          <source>Bank Accounts</source>
+          <note from="Developer" annotates="general" priority="2"></note>
+          <note from="Xliff Generator" annotates="general" priority="3">PageExtension PTE DC Swiss QR Doc. List - Action Bank Accounts - Property Caption</note>
+        </trans-unit>
       </group>
     </body>
   </file>

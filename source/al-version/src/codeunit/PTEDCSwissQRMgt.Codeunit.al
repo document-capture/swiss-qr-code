@@ -3,11 +3,11 @@ Codeunit 61110 "PTE DC SwissQR Mgt."
     TableNo = "CDC Document";
 
     var
-        CaptureMgt: Codeunit "CDC Capture Management";
         TempSwissQRBillBuffer: Record "Swiss QR-Bill Buffer" temporary;
+        CaptureMgt: Codeunit "CDC Capture Management";
         ValidQRBillCodeFound: Integer;
-        PurchDocVendBankAccountQst: Label 'A vendor bank account with IBAN or QR-IBAN\%1\was not found.\\Do you want to create a new vendor bank account?', Comment = '%1 - IBAN value';
         ImportCancelledMsg: Label 'Registration was canceled! Please setup the QR-IBAN bank account for this vendor first.';
+        PurchDocVendBankAccountQst: Label 'A vendor bank account with IBAN or QR-IBAN\%1\was not found.\\Do you want to create a new vendor bank account?', Comment = '%1 - IBAN value';
 
 
     trigger OnRun()
@@ -17,10 +17,10 @@ Codeunit 61110 "PTE DC SwissQR Mgt."
 
     local procedure TransferQRBillContentToInvoice(var Document: Record "CDC Document"): Boolean
     var
+        DocCat: Record "CDC Document Category";
         FieldValue: Record "CDC Document Value";
         TemplateField: Record "CDC Template Field";
         PurchaseHeader: Record "Purchase Header";
-        DocCat: Record "CDC Document Category";
         Handled: Boolean;
         VendBankAccountCode: Code[20];
     begin
@@ -238,8 +238,8 @@ Codeunit 61110 "PTE DC SwissQR Mgt."
     local procedure IsPurchaseInvoiceCategory(var Document: Record "CDC Document"): Boolean
     var
         DocCat: Record "CDC Document Category";
-        PurchaseInvoiceCategory: Boolean;
         IsHandled: Boolean;
+        PurchaseInvoiceCategory: Boolean;
     begin
         OnBeforeIsPurchaseInvoiceCategory(Document, PurchaseInvoiceCategory, IsHandled);
         if IsHandled then
@@ -259,12 +259,12 @@ Codeunit 61110 "PTE DC SwissQR Mgt."
 
     local procedure GetVendorBankAccount(var Document: Record "CDC Document"; var TempSwissQRBillBuffer: Record "Swiss QR-Bill Buffer"): Code[20]
     var
+        Vendor: Record Vendor;
         VendorBankAccount: Record "Vendor Bank Account";
         VendorBankAccount2: Record "Vendor Bank Account";
-        Vendor: Record Vendor;
         SwissQRBillCreateVendBank: page "Swiss QR-Bill Create Vend Bank";
-
         VendBankAccountFound: Boolean;
+        ErrorOnVendBankAccInsert: Label 'Vendor Bank Account %1 couldn''t be inserted.\IBAN: %2', Locked = true;
     begin
         if not IsPurchaseInvoiceCategory(Document) then
             exit;
@@ -288,15 +288,9 @@ Codeunit 61110 "PTE DC SwissQR Mgt."
         if VendorBankAccount.FindSet() then
             repeat
                 // check if QR IBAN is equal to Vend. bank account without spaces
-                //VendBankAccountFound := (DelChr(VendorBankAccount.IBAN) = TempSwissQRBillBuffer.IBAN);
-                //if VendBankAccountFound then
-                //    break;
                 if (DelChr(VendorBankAccount.IBAN) = TempSwissQRBillBuffer.IBAN) then
                     exit(VendorBankAccount.Code);
             until (VendorBankAccount.Next() = 0);
-
-        //if VendBankAccountFound then
-        //    exit(VendorBankAccount.Code);
 
         // No vendor bank account found - ask user to create one
         if Confirm(StrSubstNo(PurchDocVendBankAccountQst, TempSwissQRBillBuffer.IBAN)) then begin
@@ -308,7 +302,7 @@ Codeunit 61110 "PTE DC SwissQR Mgt."
             if VendorBankAccount.Insert(true) then
                 exit(VendorBankAccount.Code)
             else
-                Error('Vendor Bank Account %1 couldn''t be inserted.\IBAN: %2', VendorBankAccount.Code, TempSwissQRBillBuffer.IBAN);
+                Error(ErrorOnVendBankAccInsert, VendorBankAccount.Code, TempSwissQRBillBuffer.IBAN);
         end else
             Error(ImportCancelledMsg);
     end;
@@ -332,13 +326,14 @@ Codeunit 61110 "PTE DC SwissQR Mgt."
     var
         VendorBankAcount: Record "Vendor Bank Account";
         iidAsInteger: Integer;
-        IbanBankCode: Label 'QR-IBAN', Locked = true;
         DefaultBankCode: Label 'IBAN', Locked = true;
+        IbanBankCode: Label 'QR-IBAN', Locked = true;
+        EvalIbanError: Label 'IBAN IID kann nicht ausgelesen werden!\IBAN: %1', Locked = true;
     begin
         // check if IBAN is normal IBAN or QR-IBAN
         // QR-IID is between 30000 and 31999 at characters 5-9
         if not Evaluate(iidAsInteger, CopyStr(IBAN, 5, 5)) then
-            error('IBAN IID kann nicht ausgelesen werden!\IBAN: %1', IBAN);
+            error(EvalIbanError, IBAN);
 
         if (iidAsInteger >= 30000) and (iidAsInteger < 31999) then
             BankCode := IbanBankCode

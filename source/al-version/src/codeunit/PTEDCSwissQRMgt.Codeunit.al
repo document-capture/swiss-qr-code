@@ -263,7 +263,7 @@ Codeunit 61110 "PTE DC SwissQR Mgt."
         VendorBankAccount2: Record "Vendor Bank Account";
         Vendor: Record Vendor;
         SwissQRBillCreateVendBank: page "Swiss QR-Bill Create Vend Bank";
-        BankCode: Label 'QR-IBAN', Locked = true;
+
         VendBankAccountFound: Boolean;
     begin
         if not IsPurchaseInvoiceCategory(Document) then
@@ -288,27 +288,27 @@ Codeunit 61110 "PTE DC SwissQR Mgt."
         if VendorBankAccount.FindSet() then
             repeat
                 // check if QR IBAN is equal to Vend. bank account without spaces
-                VendBankAccountFound := (DelChr(VendorBankAccount.IBAN) = TempSwissQRBillBuffer.IBAN);
-            until (VendorBankAccount.Next() = 0) or VendBankAccountFound;
+                //VendBankAccountFound := (DelChr(VendorBankAccount.IBAN) = TempSwissQRBillBuffer.IBAN);
+                //if VendBankAccountFound then
+                //    break;
+                if (DelChr(VendorBankAccount.IBAN) = TempSwissQRBillBuffer.IBAN) then
+                    exit(VendorBankAccount.Code);
+            until (VendorBankAccount.Next() = 0);
 
-        if VendBankAccountFound then
-            exit(VendorBankAccount.Code);
+        //if VendBankAccountFound then
+        //    exit(VendorBankAccount.Code);
 
         // No vendor bank account found - ask user to create one
         if Confirm(StrSubstNo(PurchDocVendBankAccountQst, TempSwissQRBillBuffer.IBAN)) then begin
             Clear(VendorBankAccount);
             VendorBankAccount."Vendor No." := Document."Source Record No.";
+            VendorBankAccount.Code := GetVendorBankAccountCode(Document."Source Record No.", TempSwissQRBillBuffer.IBAN);
             VendorBankAccount.IBAN := TempSwissQRBillBuffer.IBAN;
             VendorBankAccount."Payment Form" := VendorBankAccount."Payment Form"::"Bank Payment Domestic";
-
-            if VendorBankAccount2.GET(Document."Source Record No.", BankCode) then
-                VendorBankAccount.Code := IncStr(BankCode)
-            else
-                VendorBankAccount.Code := BankCode;
-
             if VendorBankAccount.Insert(true) then
-                exit(VendorBankAccount.Code);
-
+                exit(VendorBankAccount.Code)
+            else
+                Error('Vendor Bank Account %1 couldn''t be inserted.\IBAN: %2', VendorBankAccount.Code, TempSwissQRBillBuffer.IBAN);
         end else
             Error(ImportCancelledMsg);
     end;
@@ -326,6 +326,34 @@ Codeunit 61110 "PTE DC SwissQR Mgt."
                 PaymBankCode.Validate(VendBankAccountCode);  // use the Bank Code value we have set before
                 RecRef.Modify()
             end;
+    end;
+
+    local procedure GetVendorBankAccountCode(VendorNo: Code[20]; IBAN: Code[50]) BankCode: Code[20]
+    var
+        VendorBankAcount: Record "Vendor Bank Account";
+        iidAsInteger: Integer;
+        IbanBankCode: Label 'QR-IBAN', Locked = true;
+        DefaultBankCode: Label 'IBAN', Locked = true;
+    begin
+        // check if IBAN is normal IBAN or QR-IBAN
+        // QR-IID is between 30000 and 31999 at characters 5-9
+        if not Evaluate(iidAsInteger, CopyStr(IBAN, 5, 5)) then
+            error('IBAN IID kann nicht ausgelesen werden!\IBAN: %1', IBAN);
+
+        if (iidAsInteger >= 30000) and (iidAsInteger < 31999) then
+            BankCode := IbanBankCode
+        else
+            BankCode := DefaultBankCode;
+
+        VendorBankAcount.SetRange("Vendor No.", VendorNo);
+        VendorBankAcount.SetFilter(Code, StrSubstNo('%1*', BankCode));
+        if not VendorBankAcount.FindLast() then  // return new bank code
+            exit;
+
+        // increment found bank code
+        BankCode := IncStr(VendorBankAcount.Code);
+        if BankCode = '' then  //IncStr returns empty string if no number in incremented string
+            BankCode := VendorBankAcount.Code + '2';
     end;
 
     internal procedure InsertQRAmtFieldToMasterTemplates()

@@ -2,7 +2,7 @@
   "id": "f27aa103-a4c5-4886-a6d0-60134c884e26",
   "name": "PTE DC Swiss QR-Bill Management",
   "publisher": "github.com/document-capture",
-  "version": "2.4.7.0",
+  "version": "2.5.0.0",
   "brief": "",
   "description": "Enhancement of standard Document Capture to register an invoice that contains a Swiss QR-Code",
   "privacyStatement": "",
@@ -15,14 +15,14 @@
       "id": "6da8dd2f-e698-461f-9147-8e404244dd85", 
       "name": "Continia Document Capture", 
       "publisher": "Continia Software", 
-      "version": "7.2.0.1"
+      "version": "12.0.0.0"
     }
     ,
     {
       "id": "98860128-1333-4598-a3da-0590804648b7", 
       "name": "QR-Bill Management for Switzerland", 
       "publisher": "Microsoft", 
-      "version": "18.1.24822.26330"
+      "version": "23.0.0.0"
     }
 
   ],
@@ -37,7 +37,7 @@
   ],
   "contextSensitiveHelpUrl": "https://continia.gitbook.io/document-capture/v/swiss-qr-code-management/",
   "showMyCode": true,
-  "runtime": "7.0",
+  "runtime": "12.0",
   "features": [ "TranslationFile"],
   "supportedLocales": ["en-US","en-GB","de-DE","de-AT","de-CH"]
 }

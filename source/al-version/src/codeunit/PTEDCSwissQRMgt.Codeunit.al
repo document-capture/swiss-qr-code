@@ -37,9 +37,9 @@ Codeunit 61110 "PTE DC SwissQR Mgt."
             exit(true);
 
         // get first valid QR code
-        TempSwissQRBillBuffer.Get(1);
+        TempSwissQRBillBuffer.Get(0);
 
-        if (ValidQRBillCodeFound > 1) then begin
+        if (ValidQRBillCodeFound > 0) then begin
 
             // Get the field value of the DC field Amount incl. VAT
             TemplateField.Get(Document."Template No.", TemplateField.Type::Header, 'AMOUNTINCLVAT');
@@ -48,7 +48,7 @@ Codeunit 61110 "PTE DC SwissQR Mgt."
                 // check if field value of amt. incl. vat is equal to the qr code
                 // if not equal, get the 2nd found valid qr code and transfer it's values into invoice
                 if FieldValue."Value (Decimal)" <> TempSwissQRBillBuffer.Amount then
-                    TempSwissQRBillBuffer.Get(2);
+                    TempSwissQRBillBuffer.Get(1);
             end;
         end;
 
@@ -174,7 +174,10 @@ Codeunit 61110 "PTE DC SwissQR Mgt."
     local procedure FindQRPaymentCodeInDocument(var Document: Record "CDC Document"; var TempSwissQRBillBuffer: Record "Swiss QR-Bill Buffer") ValidQRBillCodeFound: integer
     var
         CDCDocumentWord: Record 6085592;
-        SwissQRBillDecode: Codeunit "PTE DC SwissQR Decode";
+        CurrentSwissQRBillBuffer: Record "Swiss QR-Bill Buffer" temporary;
+        //SwissQRBillDecode: Codeunit "PTE DC SwissQR Decode";
+        SwissQRBillDecode: Codeunit "Swiss QR-Bill Decode";
+
         QRBillInStream: InStream;
         CrLf: Text;
         CurrentQRCodeLine: Text;
@@ -194,6 +197,8 @@ Codeunit 61110 "PTE DC SwissQR Mgt."
         repeat
             Clear(QRBillContent);
             Clear(QRBillInStream);
+            Clear(CurrentSwissQRBillBuffer);
+            Clear(SwissQRBillDecode);
             CDCDocumentWord.CALCFIELDS(Data);
             if CDCDocumentWord.Data.HASVALUE THEN BEGIN
                 CDCDocumentWord.Data.CREATEINSTREAM(QRBillInStream);
@@ -202,10 +207,18 @@ Codeunit 61110 "PTE DC SwissQR Mgt."
                     QRBillContent += CurrentQRCodeLine + CrLf;
                     CLEAR(CurrentQRCodeLine);
                 END;
-                if SwissQRBillDecode.DecodeQRCodeText(TempSwissQRBillBuffer, QRBillContent) then
+                //if SwissQRBillDecode.DecodeQRCodeText(TempSwissQRBillBuffer, QRBillContent) then
+                //ValidQRBillCodeFound += 1;
+                if SwissQRBillDecode.DecodeQRCodeText(CurrentSwissQRBillBuffer, QRBillContent) then begin
+                    TempSwissQRBillBuffer.Init();
+                    TempSwissQRBillBuffer."Entry No." := ValidQRBillCodeFound;
+                    TempSwissQRBillBuffer.Insert();
+                    TempSwissQRBillBuffer.TransferFields(CurrentSwissQRBillBuffer, false);
+                    TempSwissQRBillBuffer.Modify();
                     ValidQRBillCodeFound += 1;
+                end;
             END;
-        UNTIL (CDCDocumentWord.NEXT = 0) OR (ValidQRBillCodeFound >= 2);
+        UNTIL (CDCDocumentWord.NEXT = 0);// OR (ValidQRBillCodeFound >= 2);
     end;
 
     local procedure ValidateAmountsInclVat(var Document: Record "CDC Document"; var IsInvalid: Boolean)

@@ -37,19 +37,19 @@ Codeunit 61110 "PTE DC SwissQR Mgt."
             exit(true);
 
         // get first valid QR code
-        TempSwissQRBillBuffer.Get(0);
+        //TempSwissQRBillBuffer.Get(0);
 
-        if (ValidQRBillCodeFound > 0) then begin
+        // Get the field value of the DC field Amount incl. VAT
+        if not TemplateField.Get(Document."Template No.", TemplateField.Type::Header, 'AMOUNTINCLVAT') then
+            exit;
 
-            // Get the field value of the DC field Amount incl. VAT
-            TemplateField.Get(Document."Template No.", TemplateField.Type::Header, 'AMOUNTINCLVAT');
-            if CaptureMgt.GetFieldValue(Document, TemplateField, 0, FieldValue) then begin
+        if CaptureMgt.GetFieldValue(Document, TemplateField, 0, FieldValue) then begin
+            // iterate through found qr codes and check if field value of amt. incl. vat is equal to the qr code
+            // if not equal, get the 2nd found valid qr code and transfer it's values into invoice
+            if TempSwissQRBillBuffer.FindFirst() then
+                repeat
 
-                // check if field value of amt. incl. vat is equal to the qr code
-                // if not equal, get the 2nd found valid qr code and transfer it's values into invoice
-                if FieldValue."Value (Decimal)" <> TempSwissQRBillBuffer.Amount then
-                    TempSwissQRBillBuffer.Get(1);
-            end;
+                until (TempSwissQRBillBuffer.Next() = 0) or (FieldValue."Value (Decimal)" = TempSwissQRBillBuffer.Amount)
         end;
 
         // Get the created purchase document
@@ -67,10 +67,9 @@ Codeunit 61110 "PTE DC SwissQR Mgt."
         PurchaseHeader.MODIFY(TRUE);
 
         SetOPPPaymentBankCode(PurchaseHeader, VendBankAccountCode);
-
     end;
 
-    local procedure IdentifyVendorFromQRCode(var Document: Record "CDC Document"): Boolean
+    local procedure IdentifyVendorFromQRCode(var Document: Record "CDC Document") VendorIdentified: Boolean
     var
         DocCat: Record "CDC Document Category";
         Template: Record "CDC Template";
@@ -90,34 +89,40 @@ Codeunit 61110 "PTE DC SwissQR Mgt."
             exit(false);
 
         // get found qr buffer
-        if TempSwissQRBillBuffer.Get(1) then begin
-            VendorBankAccount.SetRange(IBAN, TempSwissQRBillBuffer.IBAN);
-            if VendorBankAccount.IsEmpty then
-                exit(false)
-            else
-                if VendorBankAccount.FindSet() then begin
-                    Vendor.Get(VendorBankAccount."Vendor No.");
-                    repeat
-                        TooManyVendorsFound := VendorBankAccount."Vendor No." <> Vendor."No.";
-                    until (VendorBankAccount.Next() = 0) or (TooManyVendorsFound);
+        if TempSwissQRBillBuffer.FindFirst() then
+            repeat
+                VendorBankAccount.SetRange(IBAN, TempSwissQRBillBuffer.IBAN);
+                if not VendorBankAccount.IsEmpty then begin
+                    if VendorBankAccount.FindSet() then begin
+                        Vendor.Get(VendorBankAccount."Vendor No.");
+                        repeat
+                            TooManyVendorsFound := VendorBankAccount."Vendor No." <> Vendor."No.";
+                        until (VendorBankAccount.Next() = 0) or (TooManyVendorsFound);
 
-                    if TooManyVendorsFound then
-                        exit(false);
+                        if not TooManyVendorsFound then begin
+                            RecRef.GET(Vendor.RecordId);
+                            SourceID := RecIDMgt.GetRecIDTreeID(RecRef, TRUE);
+                            Commit();
 
-                    RecRef.GET(Vendor.RecordId);
-                    SourceID := RecIDMgt.GetRecIDTreeID(RecRef, TRUE);
-                    Commit();
-
-                    Document.Validate("Source Record ID Tree ID", SourceID);
-                    Document."Identified by" := COPYSTR(STRSUBSTNO(QRIdentificationTxt, TempSwissQRBillBuffer.IBAN), 1,
-                      MaxStrLen(Document."Identified by"));
-                    exit(Document.Modify(true));
+                            Document.Validate("Source Record ID Tree ID", SourceID);
+                            Document."Identified by" := COPYSTR(STRSUBSTNO(QRIdentificationTxt, TempSwissQRBillBuffer.IBAN), 1,
+                              MaxStrLen(Document."Identified by"));
+                            VendorIdentified := Document.Modify(true)
+                        end;
+                    end;
                 end;
-        end
+            until (TempSwissQRBillBuffer.Next() = 0) or TooManyVendorsFound or VendorIdentified;
     end;
 
 
-    local procedure SetQRAmountInclVATFromQRCode(var Document: Record "CDC Document"; var Field: Record "CDC Template Field"; var Word: Text[1024]): Boolean
+    local procedure SetQRAmountInclVATFromQRCode(var
+                                                     Document: Record "CDC Document";
+
+var
+Field: Record "CDC Template Field";
+
+var
+Word: Text[1024]): Boolean
     var
         DocumentValue: Record "CDC Document Value";
     begin
@@ -128,7 +133,8 @@ Codeunit 61110 "PTE DC SwissQR Mgt."
         if ValidQRBillCodeFound = 0 then
             exit(false);
 
-        TempSwissQRBillBuffer.Get(ValidQRBillCodeFound);
+        if not TempSwissQRBillBuffer.FindLast() then
+            exit;
 
         Word := Format(TempSwissQRBillBuffer.Amount, 0, 2);
 
@@ -146,7 +152,8 @@ Codeunit 61110 "PTE DC SwissQR Mgt."
         if ValidQRBillCodeFound = 0 then
             exit(false);
 
-        TempSwissQRBillBuffer.Get(ValidQRBillCodeFound);
+        if not TempSwissQRBillBuffer.FindLast() then
+            exit;
 
         Word := TempSwissQRBillBuffer.IBAN;
 
@@ -163,7 +170,8 @@ Codeunit 61110 "PTE DC SwissQR Mgt."
         if ValidQRBillCodeFound = 0 then
             exit(false);
 
-        TempSwissQRBillBuffer.Get(ValidQRBillCodeFound);
+        if not TempSwissQRBillBuffer.FindLast() then
+            exit;
 
         Word := TempSwissQRBillBuffer.Currency;
 
@@ -210,15 +218,21 @@ Codeunit 61110 "PTE DC SwissQR Mgt."
                 //if SwissQRBillDecode.DecodeQRCodeText(TempSwissQRBillBuffer, QRBillContent) then
                 //ValidQRBillCodeFound += 1;
                 if SwissQRBillDecode.DecodeQRCodeText(CurrentSwissQRBillBuffer, QRBillContent) then begin
-                    TempSwissQRBillBuffer.Init();
-                    TempSwissQRBillBuffer."Entry No." := ValidQRBillCodeFound;
-                    TempSwissQRBillBuffer.Insert();
-                    TempSwissQRBillBuffer.TransferFields(CurrentSwissQRBillBuffer, false);
-                    TempSwissQRBillBuffer.Modify();
-                    ValidQRBillCodeFound += 1;
+                    if IsNewQRBillCode(TempSwissQRBillBuffer, CurrentSwissQRBillBuffer) then begin
+                        if ValidQRBillCodeFound > 0 then
+                            ValidQRBillCodeFound += 1;
+
+                        TempSwissQRBillBuffer.Init();
+                        TempSwissQRBillBuffer."Entry No." := ValidQRBillCodeFound;
+                        TempSwissQRBillBuffer.Insert();
+                        TempSwissQRBillBuffer.TransferFields(CurrentSwissQRBillBuffer, false);
+                        TempSwissQRBillBuffer.Modify();
+                    end;
                 end;
             END;
-        UNTIL (CDCDocumentWord.NEXT = 0);// OR (ValidQRBillCodeFound >= 2);
+        until (CDCDocumentWord.Next() = 0);// OR (ValidQRBillCodeFound >= 2);
+
+        exit(TempSwissQRBillBuffer.Count);
     end;
 
     local procedure ValidateAmountsInclVat(var Document: Record "CDC Document"; var IsInvalid: Boolean)
@@ -286,10 +300,11 @@ Codeunit 61110 "PTE DC SwissQR Mgt."
         if ValidQRBillCodeFound = 0 then
             ValidQRBillCodeFound := FindQRPaymentCodeInDocument(Document, TempSwissQRBillBuffer);
 
-        if TempSwissQRBillBuffer.Count = 0 then
+        if ValidQRBillCodeFound = 0 then
             exit;
 
-        if not TempSwissQRBillBuffer.Get(ValidQRBillCodeFound) then
+        // Search for last qr code due to documents, where we have seen two qr codes on documents
+        if not TempSwissQRBillBuffer.FindLast() then
             exit;
 
         if not Vendor.Get(Document."Source Record No.") then
@@ -340,8 +355,8 @@ Codeunit 61110 "PTE DC SwissQR Mgt."
         VendorBankAcount: Record "Vendor Bank Account";
         iidAsInteger: Integer;
         DefaultBankCode: Label 'IBAN', Locked = true;
-        IbanBankCode: Label 'QR-IBAN', Locked = true;
         EvalIbanError: Label 'IBAN IID kann nicht ausgelesen werden!\IBAN: %1', Locked = true;
+        IbanBankCode: Label 'QR-IBAN', Locked = true;
     begin
         // check if IBAN is normal IBAN or QR-IBAN
         // QR-IID is between 30000 and 31999 at characters 5-9
@@ -362,6 +377,16 @@ Codeunit 61110 "PTE DC SwissQR Mgt."
         BankCode := IncStr(VendorBankAcount.Code);
         if BankCode = '' then  //IncStr returns empty string if no number in incremented string
             BankCode := VendorBankAcount.Code + '2';
+    end;
+
+    local procedure IsNewQRBillCode(TempSwissQRBillBuffer: Record "Swiss QR-Bill Buffer"; CurrentSwissQRBillBuffer: Record "Swiss QR-Bill Buffer" temporary): Boolean
+    begin
+        if (TempSwissQRBillBuffer.IBAN <> CurrentSwissQRBillBuffer.IBAN) or
+           (TempSwissQRBillBuffer.Amount <> CurrentSwissQRBillBuffer.Amount) or
+           (TempSwissQRBillBuffer."Payment Reference" <> CurrentSwissQRBillBuffer."Payment Reference") or
+           (TempSwissQRBillBuffer."Billing Information" <> CurrentSwissQRBillBuffer."Billing Information")
+        then
+            exit(true);
     end;
 
     internal procedure InsertQRAmtFieldToMasterTemplates()

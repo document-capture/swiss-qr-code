@@ -7,8 +7,8 @@
   "description": "Enhancement of standard Document Capture to register an invoice that contains a Swiss QR-Code",
   "privacyStatement": "",
   "EULA": "",
-  "help": "https://continia.gitbook.io/document-capture/v/swiss-qr-code-management/",
-  "url": "https://github.com/document-capture/swiss-qr-code/wiki",
+  "help": "https://continia-tools.gitbook.io/help/document-capture/swiss-qr-bill-handling",
+  "url": "https://github.com/document-capture/swiss-qr-code/",
   "logo": "./res/images/logo.png",
   "dependencies": [
     {

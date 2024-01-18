@@ -46,6 +46,5 @@ pageextension 61110 "PTE DC Swiss QR Doc. List" extends "CDC Document List With 
 
 
     var
-        [InDataSet]
         ShowVendorCard: Boolean;
 }

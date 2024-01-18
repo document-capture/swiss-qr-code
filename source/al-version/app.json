@@ -36,7 +36,7 @@
     }
   ],
   "contextSensitiveHelpUrl": "https://continia.gitbook.io/document-capture/v/swiss-qr-code-management/",
-  "showMyCode": true,
+  "resourceExposurePolicy": {"allowDebugging": true,"allowDownloadingSource": true,"includeSourceInSymbolFile": true},
   "runtime": "12.0",
   "features": [ "TranslationFile"],
   "supportedLocales": ["en-US","en-GB","de-DE","de-AT","de-CH"]
